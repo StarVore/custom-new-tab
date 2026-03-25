@@ -1,5 +1,9 @@
 import { Injectable, inject } from "@angular/core";
-import { HttpClient, HttpHeaders } from "@angular/common/http";
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpHeaders,
+} from "@angular/common/http";
 import { Observable, of, forkJoin } from "rxjs";
 import { map, catchError, switchMap } from "rxjs/operators";
 import { API_ENDPOINTS } from "./api-service.config";
@@ -39,10 +43,6 @@ export class ApiService {
     return new HttpHeaders({ "Content-Type": "application/json" });
   }
 
-  private get mockBookmarkApiBase(): string {
-    return `${this.bookmarkBase}/api`;
-  }
-
   private get pocketBaseRecordsUrl(): string {
     return `${this.bookmarkBase}/api/collections/bookmarks/records`;
   }
@@ -65,12 +65,7 @@ export class ApiService {
       })
       .pipe(
         map((r) => r.status >= 200 && r.status < 300),
-        catchError(() =>
-          this.http.get(`${url}/api/bookmarks`, { observe: "response" }).pipe(
-            map((r) => r.status >= 200 && r.status < 300),
-            catchError(() => of(false)),
-          ),
-        ),
+        catchError(() => of(false)),
       );
   }
 
@@ -84,7 +79,7 @@ export class ApiService {
 
   test(body: unknown): Observable<IAPIResponse> {
     return this.http.post<IAPIResponse>(
-      `${this.mockBookmarkApiBase}/${API_ENDPOINTS.TEST}`,
+      `${this.bookmarkBase}/api/${API_ENDPOINTS.TEST}`,
       body,
       { headers: this.getHeaders() },
     );
@@ -105,11 +100,6 @@ export class ApiService {
         map((response) =>
           response.items.map((record) => this.mapPocketBaseBookmark(record)),
         ),
-        catchError(() =>
-          this.http.get<IBookmark[]>(
-            `${this.mockBookmarkApiBase}/${API_ENDPOINTS.BOOKMARKS_GET}`,
-          ),
-        ),
       );
   }
 
@@ -118,16 +108,7 @@ export class ApiService {
       .post<PocketBaseBookmarkRecord>(this.pocketBaseRecordsUrl, bookmark, {
         headers: this.getHeaders(),
       })
-      .pipe(
-        map((record) => this.mapPocketBaseBookmark(record)),
-        catchError(() =>
-          this.http.post<IBookmark>(
-            `${this.mockBookmarkApiBase}/${API_ENDPOINTS.BOOKMARKS_CREATE}`,
-            bookmark,
-            { headers: this.getHeaders() },
-          ),
-        ),
-      );
+      .pipe(map((record) => this.mapPocketBaseBookmark(record)));
   }
 
   updateBookmark(
@@ -142,28 +123,11 @@ export class ApiService {
           headers: this.getHeaders(),
         },
       )
-      .pipe(
-        map((record) => this.mapPocketBaseBookmark(record)),
-        catchError(() =>
-          this.http.put<IBookmark>(
-            `${this.mockBookmarkApiBase}/${API_ENDPOINTS.BOOKMARKS_UPDATE(id)}`,
-            changes,
-            { headers: this.getHeaders() },
-          ),
-        ),
-      );
+      .pipe(map((record) => this.mapPocketBaseBookmark(record)));
   }
 
   deleteBookmark(id: string): Observable<void> {
-    return this.http
-      .delete<void>(`${this.pocketBaseRecordsUrl}/${id}`)
-      .pipe(
-        catchError(() =>
-          this.http.delete<void>(
-            `${this.mockBookmarkApiBase}/${API_ENDPOINTS.BOOKMARKS_DELETE(id)}`,
-          ),
-        ),
-      );
+    return this.http.delete<void>(`${this.pocketBaseRecordsUrl}/${id}`);
   }
 
   reorderBookmarks(ids: string[]): Observable<IBookmark[]> {
@@ -175,16 +139,6 @@ export class ApiService {
           { headers: this.getHeaders() },
         ),
       ),
-    )
-      .pipe(switchMap(() => this.getBookmarks()))
-      .pipe(
-        catchError(() =>
-          this.http.put<IBookmark[]>(
-            `${this.mockBookmarkApiBase}/${API_ENDPOINTS.BOOKMARKS_REORDER}`,
-            { ids },
-            { headers: this.getHeaders() },
-          ),
-        ),
-      );
+    ).pipe(switchMap(() => this.getBookmarks()));
   }
 }
