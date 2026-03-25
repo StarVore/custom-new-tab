@@ -17,8 +17,6 @@ export class App implements OnInit {
   private swUpdate = inject(SwUpdate, { optional: true });
 
   ngOnInit(): void {
-    this.bgService.loadBackground();
-
     if (!isDevMode() && this.swUpdate?.isEnabled) {
       this.swUpdate.versionUpdates
         .pipe(filter((e): e is VersionReadyEvent => e.type === "VERSION_READY"))

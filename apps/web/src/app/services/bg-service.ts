@@ -1,7 +1,7 @@
 //
 
 import { DOCUMENT } from "@angular/common";
-import { inject, Injectable, signal } from "@angular/core";
+import { effect, inject, Injectable, signal } from "@angular/core";
 import { IApodPhoto } from "../models/IApodPhoto";
 import { ApiService } from "./api-service";
 import { ConfigService } from "./config.service";
@@ -16,6 +16,20 @@ export class BgService {
   private configService = inject(ConfigService);
   private document = inject(DOCUMENT);
   readonly photoDetails = signal<IApodPhoto | null>(null);
+
+  constructor() {
+    effect(() => {
+      const isConfigured = this.configService.isConfigured();
+
+      if (!isConfigured) {
+        this.photoDetails.set(null);
+        this.clearBackground();
+        return;
+      }
+
+      this.loadBackground();
+    });
+  }
 
   loadBackground(): void {
     const cached = this.getCachedPhoto();
@@ -67,5 +81,13 @@ export class BgService {
     this.document.body.style.backgroundPosition = "center";
     this.document.body.style.backgroundRepeat = "no-repeat";
     this.document.body.style.backgroundAttachment = "fixed";
+  }
+
+  private clearBackground(): void {
+    this.document.body.style.backgroundImage = "";
+    this.document.body.style.backgroundSize = "";
+    this.document.body.style.backgroundPosition = "";
+    this.document.body.style.backgroundRepeat = "";
+    this.document.body.style.backgroundAttachment = "";
   }
 }

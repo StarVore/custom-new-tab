@@ -33,6 +33,20 @@ let bookmarks = [
 ];
 let nextBookmarkId = 5;
 
+function getSortedBookmarks() {
+    return [...bookmarks].sort((a, b) => a.order - b.order);
+}
+
+function getPocketBaseListResponse() {
+    return {
+        page: 1,
+        perPage: 200,
+        totalItems: bookmarks.length,
+        totalPages: 1,
+        items: getSortedBookmarks(),
+    };
+}
+
 function readBody(req) {
     return new Promise((resolve, reject) => {
         let data = '';
@@ -48,6 +62,65 @@ async function handleBookmarks(req, res) {
     const url = req.url;
     const method = req.method;
 
+    // GET /api/collections/bookmarks/records
+    if (method === 'GET' && url.startsWith('/api/collections/bookmarks/records')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(getPocketBaseListResponse()));
+        return;
+    }
+
+    // POST /api/collections/bookmarks/records
+    if (method === 'POST' && url === '/api/collections/bookmarks/records') {
+        const body = await readBody(req);
+        const newBookmark = {
+            id: String(nextBookmarkId++),
+            title: body.title || '',
+            url: body.url || '',
+            order: typeof body.order === 'number' ? body.order : bookmarks.length,
+            ...(body.customImageUrl ? { customImageUrl: body.customImageUrl } : {}),
+        };
+        bookmarks.push(newBookmark);
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(newBookmark));
+        return;
+    }
+
+    // PATCH /api/collections/bookmarks/records/:id
+    const patchRecordMatch = url.match(/^\/api\/collections\/bookmarks\/records\/([^/?]+)(?:\?.*)?$/);
+    if (method === 'PATCH' && patchRecordMatch) {
+        const id = patchRecordMatch[1];
+        const bm = bookmarks.find(b => b.id === id);
+        if (!bm) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Bookmark not found' }));
+            return;
+        }
+        const body = await readBody(req);
+        if (body.title !== undefined) bm.title = body.title;
+        if (body.url !== undefined) bm.url = body.url;
+        if (body.customImageUrl !== undefined) bm.customImageUrl = body.customImageUrl;
+        if (body.order !== undefined) bm.order = body.order;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(bm));
+        return;
+    }
+
+    // DELETE /api/collections/bookmarks/records/:id
+    const deleteRecordMatch = url.match(/^\/api\/collections\/bookmarks\/records\/([^/?]+)(?:\?.*)?$/);
+    if (method === 'DELETE' && deleteRecordMatch) {
+        const id = deleteRecordMatch[1];
+        const index = bookmarks.findIndex(b => b.id === id);
+        if (index === -1) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Bookmark not found' }));
+            return;
+        }
+        bookmarks.splice(index, 1);
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+
     // PUT /api/bookmarks/reorder — must be checked before /:id
     if (method === 'PUT' && url === '/api/bookmarks/reorder') {
         const body = await readBody(req);
@@ -61,16 +134,15 @@ async function handleBookmarks(req, res) {
             const bm = bookmarks.find(b => b.id === String(id));
             if (bm) bm.order = index;
         });
-        bookmarks.sort((a, b) => a.order - b.order);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(bookmarks));
+        res.end(JSON.stringify(getSortedBookmarks()));
         return;
     }
 
     // GET /api/bookmarks
     if (method === 'GET' && url === '/api/bookmarks') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify([...bookmarks].sort((a, b) => a.order - b.order)));
+        res.end(JSON.stringify(getSortedBookmarks()));
         return;
     }
 

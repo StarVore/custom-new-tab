@@ -59,6 +59,10 @@ The mock server provides:
 - `PUT  /api/bookmarks/:id` — update bookmark
 - `DELETE /api/bookmarks/:id` — delete bookmark
 - `PUT  /api/bookmarks/reorder` — reorder bookmarks
+- `GET  /api/collections/bookmarks/records` — PocketBase-compatible bookmark list response
+- `POST /api/collections/bookmarks/records` — PocketBase-compatible bookmark create
+- `PATCH /api/collections/bookmarks/records/:id` — PocketBase-compatible bookmark update
+- `DELETE /api/collections/bookmarks/records/:id` — PocketBase-compatible bookmark delete
 - `GET  /api/apod` — static dev APOD response (no network requests)
 - `GET  /health` — liveness check
 
