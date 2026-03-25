@@ -1,121 +1,184 @@
-# Plan: Bookmark Grid + PWA Offline Support
+# Plan: Publishable Self-Hosted New Tab Platform
 
 ## TL;DR
 
-Build a drag-and-droppable bookmark shortcuts grid into the existing Angular 21 new-tab app. 8 cards visible at a time (4×2), scrollable for more. Cards show auto-fetched favicons (Google Favicon API) with optional image override, a title, and a hyperlink to the site. Full CRUD via REST API (mock server in dev), localStorage as a read-through cache for instant loads, and complete offline capability via `@angular/service-worker`. Mutations made offline are queued and replayed when connectivity returns.
-
+Refactor the project into a multi-service layout with one shared frontend and separate backend services. Keep a strict mock backend for development, add a dedicated APOD proxy for real deployments, and use PocketBase for bookmark sync. Add first-run backend configuration in the app so users can self-host services and point clients to their own URLs. Support three frontend distribution targets: Chrome extension, Firefox extension, and LAN-hosted site for devices that do not support extensions. Keep TLS optional via Docker Compose environment variables and user-provided certificate paths.
 
 ---
 
 ## Decisions
 
-* Max visible at once: 18 (6×3 grid), scrollable for more
-* Image: auto-fetch favicon from Google Favicon API, allow custom URL override
-* Add/delete: dynamic (no fixed slots)
-* Data store: REST API (mock server in dev) + localStorage cache layer
-* Drag-and-drop: Angular CDK `DragDropModule`
-* BaseScreen: removed from app.html (file kept, unused)
-* Service worker disabled in dev mode; test offline via production build
-
-
----
-
-## Phase 1 — Foundation
-
-
-1. **Install** `@angular/cdk@21` — adds `DragDropModule`
-2. **Add** `IBookmark` model — `{ id, title, url, customImageUrl?, order }` in `src/app/models/IBookmark.ts`
-3. **Update** `api-service.config.ts` — add `BOOKMARKS_GET`, `BOOKMARKS_CREATE`, `BOOKMARKS_UPDATE`, `BOOKMARKS_DELETE`, `BOOKMARKS_REORDER` endpoint keys
-4. **Create** `BookmarkService` (`src/app/services/bookmark.service.ts`) — reactive signal state; `getAll()` loads from localStorage cache first then syncs with API; mutations write-through cache; includes offline mutation queue (step 16)
-5. **Extend mock server** (`mock_server/server.js`) — seed in-memory bookmark array; add `GET/POST /api/bookmarks`, `PUT/DELETE /api/bookmarks/:id`, `PUT /api/bookmarks/reorder`
-
-
----
-
-## Phase 2 — Grid & Card Components *(parallel)*
-
-
-6. `BookmarksGridComponent` (`src/app/bookmarks-grid/`) — `cdkDropList` container; CSS grid `repeat(4, 1fr)`, `max-height` \~2 rows, `overflow-y: auto`; Add `+` button that opens edit modal
-7. `BookmarkCardComponent` (`src/app/bookmark-card/`) — `cdkDrag` root; favicon `<img>` from Google Favicon API (`https://www.google.com/s2/favicons?domain=<host>&sz=64`) or `customImageUrl`; title; edit + delete buttons shown on hover
-
+- Repository structure becomes app-plus-services:
+- apps/web for Angular frontend
+- services/mock-server for development-only API replacement
+- services/apod-proxy for production APOD fetching
+- services/pocketbase for data persistence and operational scripts
+- Development mode uses mock-server instead of PocketBase
+- Production/LAN mode uses PocketBase for bookmarks and APOD proxy for image metadata
+- First-run setup screen collects:
+- Bookmark backend base URL
+- APOD backend base URL
+- Docker Compose is fully env-configurable:
+- Service ports
+- PUID and PGID
+- Timezone
+- Optional TLS toggle and cert/key paths
+- TLS remains optional:
+- HTTP works out of the box
+- HTTPS enabled only when explicitly configured
+- Frontend target support:
+- Chrome extension
+- Firefox extension
+- LAN-hosted web app for non-extension clients
+- Offline behavior remains cache-first with local persistence and queued mutation replay
 
 ---
 
-## Phase 3 — Edit Modal *(depends on Phase 2)*
+## Phase 1 — Repository Restructure
 
-
-8. `BookmarkEditModalComponent` (`src/app/bookmark-edit-modal/`) — reactive form (Title, URL, Custom Image URL optional); live favicon preview as URL is typed; add + edit modes; fixed-position overlay with backdrop
-
-
----
-
-## Phase 4 — App Integration
-
-
- 9. **Update** `app.html` — remove `<app-base-screen>`, insert `<app-bookmarks-grid>`
-10. **Update** `app.ts` — swap imports
-11. **localStorage cache** (`bookmark_cache`) — stale-while-revalidate: emit cache on load, sync with API, write-through on all mutations
-
+1. Move Angular application to apps/web
+2. Move current mock backend into services/mock-server
+3. Create services/apod-proxy for real APOD retrieval and parsing
+4. Keep root as orchestration layer for Compose, docs, and scripts
+5. Update build configs and paths to new folder structure
 
 ---
 
-## Phase 5 — PWA / Offline Support *(depends on Phase 4)*
+## Phase 2 — Backend Service Boundaries
 
+6. Keep services/mock-server as development-only replacement for bookmark and APOD APIs
+7. Ensure services/apod-proxy is dedicated to APOD retrieval for production/LAN use
+8. APOD proxy response contract includes:
+9. url
+10. pageUrl
+11. explanation
+12. fetchedAt
+13. Preserve APOD fallback logic by walking backward through previous days until image media is found
+14. Keep PocketBase focused on bookmark persistence and sync
 
-12. **Install** `@angular/service-worker@21`
-13. `angular.json` — add `serviceWorker: true` and `"ngswConfigPath": "ngsw-config.json"` to the production build configuration
-14. **Create** `ngsw-config.json`:
-    * `assetGroups`: app shell (HTML/JS/CSS) with `installMode: prefetch`; lazy assets with `installMode: lazy`
-    * `dataGroups`: `/api/bookmarks` → `strategy: freshness` (3s network timeout, cache fallback, 7-day expiry); `https://www.google.com/s2/favicons/**` → `strategy: performance` (cache-first, 100 entries, 30-day expiry)
-15. **Register** `ServiceWorkerModule` in `app.config.ts` — `registerWhenStable:30000`, disabled in dev mode (`!isDevMode()`)
-16. **Offline mutation queue** in `BookmarkService` — on CUD/reorder HTTP failure, push `{ type, payload, timestamp }` to `bookmark_pending_mutations` in localStorage; listen for `window online` event to drain and replay queue in order, then re-sync cache
-17. `SwUpdate` integration in `app.ts` — subscribe to `VERSION_READY` events; prompt user to reload to activate new version
+---
 
+## Phase 3 — First-Run Configuration UX
+
+15. Add setup screen shown on first app launch per device
+16. Collect bookmark backend URL and APOD backend URL
+17. Add connection test actions for both services before save
+18. Persist configuration locally on device
+19. Add route guard to block normal app routes until config exists
+20. Add settings flow to edit backend URLs later if host/IP/ports change
+
+---
+
+## Phase 4 — Compose Profiles and Environment Variables
+
+21. Add root docker-compose with profile support:
+22. dev profile:
+23. web-dev
+24. mock-server
+25. prod profile:
+26. web-static
+27. pocketbase
+28. apod-proxy
+29. optional reverse proxy
+30. Add root env template with configurable values:
+31. WEB_PORT
+32. POCKETBASE_PORT
+33. APOD_PROXY_PORT
+34. MOCK_SERVER_PORT
+35. PUID
+36. PGID
+37. TZ
+38. ENABLE_TLS
+39. TLS_CERT_PATH
+40. TLS_KEY_PATH
+41. Apply PUID and PGID mapping where persistent volume writes occur
+
+---
+
+## Phase 5 — Optional SSL Support
+
+42. Add reverse proxy in production profile for optional TLS termination
+43. Keep default mode HTTP-only with no certificate requirements
+44. Enable HTTPS only when ENABLE_TLS is true
+45. Mount user certificate and key using TLS_CERT_PATH and TLS_KEY_PATH
+46. Validate both startup paths:
+47. TLS disabled with no cert paths
+48. TLS enabled with cert paths present
+
+---
+
+## Phase 6 — Frontend Packaging Targets
+
+49. Add Chrome extension build target
+50. Add Firefox extension build target
+51. Add LAN-hosted site build target for non-extension devices
+52. Keep one shared frontend codebase and setup flow across all targets
+53. Preserve offline app-shell capability for LAN-hosted target
+
+---
+
+## Phase 7 — Data, Cache, and Sync Behavior
+
+54. Keep local cache as immediate read path
+55. Keep optimistic updates for bookmark interactions
+56. Keep queued mutation replay on reconnect
+57. Route bookmark operations to configured bookmark backend URL
+58. Route APOD operations to configured APOD backend URL
+59. Ensure app is still usable when backend is temporarily unreachable
+
+---
+
+## Phase 8 — Documentation and Publishability
+
+60. Rewrite README as operator-focused deployment guide
+61. Include install flows for:
+62. Chrome extension
+63. Firefox extension
+64. LAN-hosted site
+65. Document development versus production Compose usage
+66. Document PocketBase collection schema and required fields
+67. Document first-run backend URL setup values
+68. Add troubleshooting for:
+69. bad URL or port config
+70. cert/key mounting issues
+71. CORS and mixed-content issues
+72. stale local config values
+73. offline queue replay behavior
 
 ---
 
 ## Relevant Files
 
-* `src/app/models/IBookmark.ts` — new
-* `src/app/services/bookmark.service.ts` — new
-* `src/app/services/api-service.config.ts` — add endpoints
-* `src/app/services/api-service.ts` — add bookmark HTTP methods
-* `src/app/bookmarks-grid/` — new component (3 files)
-* `src/app/bookmark-card/` — new component (3 files)
-* `src/app/bookmark-edit-modal/` — new component (3 files)
-* `src/app/app.html` — swap BaseScreen for grid
-* `src/app/app.ts` — update imports
-* `src/app/app.config.ts` — register ServiceWorkerModule
-* `mock_server/server.js` — bookmark CRUD routes
-* `ngsw-config.json` — new, PWA caching rules
-* `angular.json` — enable service worker in prod build
-* `package.json` — add `@angular/cdk`, `@angular/service-worker`
-
+- docker-compose.yml
+- .env.example
+- apps/web
+- services/mock-server
+- services/apod-proxy
+- services/pocketbase
+- README.md
+- package.json
+- angular.json
 
 ---
 
 ## Verification
 
-
-1. `npm install` completes without errors
-2. `npm run mock:start` → `GET /api/bookmarks` returns sample data
-3. `npm start` → 4×2 grid visible against APOD background
-4. Add/edit/delete all persist through API + localStorage
-5. Drag to reorder updates order in API and cache
-6. Reload shows bookmarks instantly from cache, then syncs
-7. **Offline**: disable network → app loads from SW cache; make a mutation → queued in localStorage; re-enable → queue drains and syncs
-8. `npm run build` (production) → `ngsw-worker.js` and `ngsw.json` appear in `dist/`
-9. `npm test` — existing tests pass
-
+1. Dev profile starts and app works fully using mock-server only
+2. Prod profile starts and app syncs bookmarks through PocketBase
+3. APOD proxy returns image metadata and handles video-day fallback
+4. First-run setup appears and stores backend URLs
+5. Editing backend URLs later updates service connectivity
+6. Offline mode loads cached app data and replays queued mutations on reconnect
+7. TLS disabled mode works without cert files
+8. TLS enabled mode works with provided cert/key mounts
+9. Chrome extension build is installable and functional
+10. Firefox extension build is installable and functional
+11. LAN-hosted site is reachable on local network and works on devices without extension support
 
 ---
 
 ## Further Considerations
 
-
-1. **Grid height**: Fixed px height tied to card size vs. `max-height: 50vh` to adapt to screen size
-2. **Update prompt**: Silent auto-reload on new SW version vs. toast/banner asking user to click "Reload"
-3. **Favicon fallback**: Letter-avatar or generic globe icon when Google's Favicon API returns blank
-4. **API down fallback**: Silent cached-only mode vs. visible error indicator when mock server is unreachable
-
-
+1. Reverse proxy choice: Caddy for simpler optional TLS setup, or nginx for tighter manual control
+2. Extension packaging conventions: output structure and release artifact naming
+3. Migration strategy: one structural refactor first, then service split and setup UX in follow-up work to reduce risk

@@ -3,14 +3,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDir": "./apps/web/src",
     "outDir": "./build",
     "types": []
   },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "exclude": [
-    "./src/**/*.spec.ts"
-  ]
+  "include": ["./apps/web/src/**/*.ts"],
+  "exclude": ["./apps/web/src/**/*.spec.ts"]
 }

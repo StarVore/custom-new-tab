@@ -1,5 +1,9 @@
 import { Component, inject, signal } from "@angular/core";
-import { CdkDropList, CdkDropListGroup, moveItemInArray } from "@angular/cdk/drag-drop";
+import {
+  CdkDropList,
+  CdkDropListGroup,
+  moveItemInArray,
+} from "@angular/cdk/drag-drop";
 import { BookmarkService } from "../../services/bookmark.service";
 import { IBookmark } from "../../models/IBookmark";
 import { BookmarkCardComponent } from "../bookmark-card/bookmark-card";
@@ -7,7 +11,12 @@ import { BookmarkEditModalComponent } from "../bookmark-edit-modal/bookmark-edit
 
 @Component({
   selector: "app-bookmarks-grid",
-  imports: [CdkDropList, CdkDropListGroup, BookmarkCardComponent, BookmarkEditModalComponent],
+  imports: [
+    CdkDropList,
+    CdkDropListGroup,
+    BookmarkCardComponent,
+    BookmarkEditModalComponent,
+  ],
   templateUrl: "./bookmarks-grid.html",
   styleUrl: "./bookmarks-grid.css",
 })

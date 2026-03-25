@@ -94,6 +94,7 @@
 }
 
 /* CDK list reorder animation */
-.bookmarks-grid.cdk-drop-list-dragging app-bookmark-card:not(.cdk-drag-placeholder) {
+.bookmarks-grid.cdk-drop-list-dragging
+  app-bookmark-card:not(.cdk-drag-placeholder) {
   transition: transform 200ms ease;
 }

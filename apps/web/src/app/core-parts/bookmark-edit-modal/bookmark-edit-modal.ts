@@ -6,7 +6,12 @@ import {
   signal,
   effect,
 } from "@angular/core";
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms";
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from "@angular/forms";
 import { IBookmark } from "../../models/IBookmark";
 
 @Component({
@@ -42,7 +47,9 @@ export class BookmarkEditModalComponent implements OnInit {
       }
     });
     this.form.get("customImageUrl")!.valueChanges.subscribe((val: string) => {
-      this.faviconPreview.set(val || this.getFaviconFromUrl(this.form.get("url")!.value));
+      this.faviconPreview.set(
+        val || this.getFaviconFromUrl(this.form.get("url")!.value),
+      );
     });
 
     this.updateFaviconPreview(bm?.url ?? "");

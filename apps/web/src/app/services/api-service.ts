@@ -40,9 +40,7 @@ export class ApiService {
     );
   }
 
-  createBookmark(
-    bookmark: Omit<IBookmark, "id">,
-  ): Observable<IBookmark> {
+  createBookmark(bookmark: Omit<IBookmark, "id">): Observable<IBookmark> {
     return this.http.post<IBookmark>(
       `${this.apiUrl}${API_ENDPOINTS.BOOKMARKS_CREATE}`,
       bookmark,

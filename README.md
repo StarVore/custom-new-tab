@@ -41,13 +41,14 @@ Custom New Tab is an Angular-based browser start page focused on quick access bo
 
 Key parts of the app:
 
-- `src/app/bookmarks-grid/` - responsive bookmark grid and drag/drop behavior
-- `src/app/bookmark-card/` - individual bookmark tile
-- `src/app/bookmark-edit-modal/` - add/edit bookmark dialog
-- `src/app/services/bookmark.service.ts` - bookmark state, API sync, and local cache
-- `src/app/services/bg-service.ts` - APOD background fetch/cache/apply logic
-- `src/app/core-parts/footer/` - expandable background details sheet
-- `mock_server/server.js` - local API endpoints for bookmarks and APOD
+- `apps/web/src/app/bookmarks-grid/` - responsive bookmark grid and drag/drop behavior
+- `apps/web/src/app/bookmark-card/` - individual bookmark tile
+- `apps/web/src/app/bookmark-edit-modal/` - add/edit bookmark dialog
+- `apps/web/src/app/services/bookmark.service.ts` - bookmark state, API sync, and local cache
+- `apps/web/src/app/services/bg-service.ts` - APOD background fetch/cache/apply logic
+- `apps/web/src/app/core-parts/footer/` - expandable background details sheet
+- `services/mock-server/server.js` - local API endpoints for bookmarks and APOD (dev only)
+- `services/apod-proxy/server.js` - dedicated APOD proxy service scaffold
 - `ngsw-config.json` - offline caching configuration
 
 ## Getting Started

@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "mock:start": "node mock_server/server.js",
+    "mock:start": "node services/mock-server/server.js",
+    "apod-proxy:start": "node services/apod-proxy/server.js",
     "prepare": "husky"
   },
   "lint-staged": {

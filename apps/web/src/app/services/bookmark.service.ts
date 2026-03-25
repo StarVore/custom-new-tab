@@ -125,24 +125,22 @@ export class BookmarkService {
     };
     this.bookmarks.update((prev) => [...prev, optimistic]);
 
-    this.api
-      .createBookmark({ ...data, order: nextOrder })
-      .subscribe({
-        next: (created) => {
-          this.bookmarks.update((prev) =>
-            prev.map((b) => (b.id === optimistic.id ? created : b)),
-          );
-          this.writeCache(this.bookmarks());
-        },
-        error: () => {
-          this.enqueueMutation({
-            type: "create",
-            payload: { ...data, order: nextOrder },
-            timestamp: Date.now(),
-          });
-          this.writeCache(this.bookmarks());
-        },
-      });
+    this.api.createBookmark({ ...data, order: nextOrder }).subscribe({
+      next: (created) => {
+        this.bookmarks.update((prev) =>
+          prev.map((b) => (b.id === optimistic.id ? created : b)),
+        );
+        this.writeCache(this.bookmarks());
+      },
+      error: () => {
+        this.enqueueMutation({
+          type: "create",
+          payload: { ...data, order: nextOrder },
+          timestamp: Date.now(),
+        });
+        this.writeCache(this.bookmarks());
+      },
+    });
   }
 
   update(
