@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
-import { ApiService } from "../../services/api-service";
+import { ApiService } from "../services/api-service";
+import { IAPIResponse } from "../models/IAPIResponse";
 
 @Component({
   selector: "app-base-screen",
@@ -14,20 +15,20 @@ export class BaseScreen implements OnInit {
   constructor(
     private apiService: ApiService,
     private changeDetectorRef: ChangeDetectorRef,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.apiService.test({}).subscribe({
-      next: (response) => {
-        console.log('API Response:', response);
-        this.testSuccess=true;
+      next: (response: IAPIResponse) => {
+        console.log("API Response:", response);
+        this.testSuccess = true;
         this.changeDetectorRef.detectChanges();
       },
-      error: (error) => {
-        console.error('API Error:', error);
+      error: (error: any) => {
+        console.error("API Error:", error);
         this.testSuccess = false;
         this.changeDetectorRef.detectChanges();
-      }
+      },
     });
   }
 }

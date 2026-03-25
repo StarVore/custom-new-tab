@@ -1,0 +1,20 @@
+/* Fallback styles to keep footer readable and fixed even if utility generation misses classes. */
+:host {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+}
+
+footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+p,
+a {
+  color: inherit;
+}

@@ -1,5 +1,6 @@
 //
 
 export const API_ENDPOINTS = {
-    TEST: 'test',
-}
+  TEST: "test",
+  APOD: "apod",
+};
