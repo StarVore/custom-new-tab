@@ -1,6 +1,6 @@
 # Custom New Tab
 
-A self-hosted new tab page with bookmarks and a NASA APOD background. Runs as a Chrome extension, Firefox extension, or a LAN-hosted web app for devices that do not support extensions.
+A self-hosted new tab page with bookmarks and a NASA Astronomy Picture Of the Day background. Runs as a Chrome extension, Firefox extension, or a LAN-hosted web app for devices that do not support extensions.
 
 ---
 
