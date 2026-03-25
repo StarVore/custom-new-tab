@@ -4,7 +4,7 @@ ARG POCKETBASE_VERSION=0.36.7
 ARG TARGETOS=linux
 ARG TARGETARCH
 
-RUN apk add --no-cache ca-certificates unzip wget \
+RUN apk add --no-cache ca-certificates su-exec unzip wget \
     && case "$TARGETARCH" in \
         amd64) pb_arch="amd64" ;; \
         arm64) pb_arch="arm64" ;; \
@@ -14,11 +14,16 @@ RUN apk add --no-cache ca-certificates unzip wget \
         "https://github.com/pocketbase/pocketbase/releases/download/v${POCKETBASE_VERSION}/pocketbase_${POCKETBASE_VERSION}_${TARGETOS}_${pb_arch}.zip" \
     && unzip /tmp/pocketbase.zip -d /pb \
     && chmod +x /pb/pocketbase \
+    && mkdir -p /pb/pb_data \
+    && chmod 0775 /pb/pb_data \
     && rm -f /tmp/pocketbase.zip
+
+COPY services/pocketbase/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 WORKDIR /pb
 
 EXPOSE 8090
 
-ENTRYPOINT ["./pocketbase"]
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["serve", "--http=0.0.0.0:8090"]
