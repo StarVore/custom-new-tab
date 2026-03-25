@@ -7,7 +7,7 @@ import {
   effect,
 } from "@angular/core";
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { IBookmark } from "../models/IBookmark";
+import { IBookmark } from "../../models/IBookmark";
 
 @Component({
   selector: "app-bookmark-edit-modal",

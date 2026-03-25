@@ -1,7 +1,7 @@
 //
 
 import { DOCUMENT } from "@angular/common";
-import { inject, Injectable } from "@angular/core";
+import { inject, Injectable, signal } from "@angular/core";
 import { IApodPhoto } from "../models/IApodPhoto";
 import { ApiService } from "./api-service";
 
@@ -13,10 +13,12 @@ const STORAGE_KEY = "apod_background";
 export class BgService {
   private apiService = inject(ApiService);
   private document = inject(DOCUMENT);
+  readonly photoDetails = signal<IApodPhoto | null>(null);
 
   loadBackground(): void {
     const cached = this.getCachedPhoto();
     if (cached) {
+      this.photoDetails.set(cached);
       this.applyBackground(cached.url);
       return;
     }
@@ -24,6 +26,7 @@ export class BgService {
     this.apiService.getApodImage().subscribe({
       next: (photo) => {
         this.cachePhoto(photo);
+        this.photoDetails.set(photo);
         this.applyBackground(photo.url);
       },
       error: (err) => console.error("Failed to load APOD background:", err),

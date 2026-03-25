@@ -1,5 +1,5 @@
 import { Component, input, output } from "@angular/core";
-import { IBookmark } from "../models/IBookmark";
+import { IBookmark } from "../../models/IBookmark";
 import { CdkDrag } from "@angular/cdk/drag-drop";
 
 @Component({

@@ -25,11 +25,11 @@
     <p
       class="text-xs leading-snug drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] md:text-base md:leading-relaxed"
     >
-      {{ photoDetails?.explanation || "Loading photo details..." }}
+      {{ photoDetails()?.explanation || "Loading photo details..." }}
     </p>
-    @if (photoDetails?.pageUrl) {
+    @if (photoDetails()?.pageUrl) {
       <a
-        [href]="photoDetails?.pageUrl"
+        [href]="photoDetails()?.pageUrl"
         target="_blank"
         rel="noopener noreferrer"
         class="mt-1 inline-block text-[11px] font-medium text-cyan-200 underline decoration-cyan-300/70 underline-offset-2 hover:text-cyan-100 md:mt-2 md:text-sm"
