@@ -82,10 +82,11 @@ This starts one stack with three services:
 - **pocketbase** — bookmark persistence (port `$POCKETBASE_PORT`, default `8090`)
 - **apod-proxy** — live APOD image fetcher (port `$APOD_PROXY_PORT`, default `3001`)
 
-The `web` and `apod-proxy` images are built by Docker directly from the GitHub repository configured in `.env`:
+The `web`, `pocketbase`, and `apod-proxy` images are built by Docker directly from the GitHub repository configured in `.env`:
 
 - `GIT_OWNER_REPO` — GitHub `owner/repo`
 - `GIT_REF` — branch, tag, or commit ref to build
+- `POCKETBASE_VERSION` — official PocketBase release version downloaded during the image build
 
 Open `http://<your-server-ip>` in a browser. The setup screen asks for the two service URLs:
 
@@ -158,20 +159,21 @@ Set the collection API rules to allow read/write without authentication (or conf
 
 ## Environment variables
 
-| Variable          | Default                   | Description                                       |
-| ----------------- | ------------------------- | ------------------------------------------------- |
-| `GIT_OWNER_REPO`  | `StarVore/custom-new-tab` | GitHub repository used as the Docker build source |
-| `GIT_REF`         | `main`                    | Branch, tag, or commit ref to build from          |
-| `WEB_PORT`        | `80`                      | Host port for the web service (HTTP)              |
-| `WEB_TLS_PORT`    | `443`                     | Host port for the web service (HTTPS)             |
-| `POCKETBASE_PORT` | `8090`                    | Host port for PocketBase                          |
-| `APOD_PROXY_PORT` | `3001`                    | Host port for the APOD proxy                      |
-| `PUID`            | `1000`                    | UID for PocketBase volume writes                  |
-| `PGID`            | `1000`                    | GID for PocketBase volume writes                  |
-| `TZ`              | `UTC`                     | Timezone                                          |
-| `ENABLE_TLS`      | `false`                   | Set `true` to enable HTTPS                        |
-| `TLS_CERT_PATH`   | `./certs/cert.pem`        | Host path to TLS certificate                      |
-| `TLS_KEY_PATH`    | `./certs/key.pem`         | Host path to TLS private key                      |
+| Variable             | Default                   | Description                                              |
+| -------------------- | ------------------------- | -------------------------------------------------------- |
+| `GIT_OWNER_REPO`     | `StarVore/custom-new-tab` | GitHub repository used as the Docker build source        |
+| `GIT_REF`            | `main`                    | Branch, tag, or commit ref to build from                 |
+| `POCKETBASE_VERSION` | `0.36.7`                  | PocketBase release version downloaded in the image build |
+| `WEB_PORT`           | `80`                      | Host port for the web service (HTTP)                     |
+| `WEB_TLS_PORT`       | `443`                     | Host port for the web service (HTTPS)                    |
+| `POCKETBASE_PORT`    | `8090`                    | Host port for PocketBase                                 |
+| `APOD_PROXY_PORT`    | `3001`                    | Host port for the APOD proxy                             |
+| `PUID`               | `1000`                    | UID for PocketBase volume writes                         |
+| `PGID`               | `1000`                    | GID for PocketBase volume writes                         |
+| `TZ`                 | `UTC`                     | Timezone                                                 |
+| `ENABLE_TLS`         | `false`                   | Set `true` to enable HTTPS                               |
+| `TLS_CERT_PATH`      | `./certs/cert.pem`        | Host path to TLS certificate                             |
+| `TLS_KEY_PATH`       | `./certs/key.pem`         | Host path to TLS private key                             |
 
 ---
 

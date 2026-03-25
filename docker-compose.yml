@@ -27,8 +27,11 @@ services:
     restart: unless-stopped
 
   pocketbase:
-    image: ghcr.io/pocketbase/pocketbase:latest
-    command: ["./pocketbase", "serve", "--http=0.0.0.0:8090"]
+    build:
+      context: https://github.com/${GIT_OWNER_REPO:-StarVore/custom-new-tab}.git#${GIT_REF:-main}
+      dockerfile: services/pocketbase/Dockerfile
+      args:
+        POCKETBASE_VERSION: "${POCKETBASE_VERSION:-0.36.7}"
     ports:
       - "${POCKETBASE_PORT:-8090}:8090"
     volumes:
