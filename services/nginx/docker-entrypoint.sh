@@ -6,8 +6,8 @@ set -e
 
 CERT=/etc/nginx/certs/cert.pem
 KEY=/etc/nginx/certs/key.pem
-HTTP_CONF=/etc/nginx/conf.d/nginx.http.conf
-TLS_CONF=/etc/nginx/conf.d/nginx.tls.conf
+HTTP_CONF=/etc/nginx/custom/nginx.http.conf
+TLS_CONF=/etc/nginx/custom/nginx.tls.conf
 DEFAULT_CONF=/etc/nginx/conf.d/default.conf
 
 if [ "${ENABLE_TLS}" = "true" ] && [ -s "$CERT" ] && [ -s "$KEY" ]; then
