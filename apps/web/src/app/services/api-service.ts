@@ -1,48 +1,71 @@
-import { Injectable } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { Observable } from "rxjs";
+import { Observable, of } from "rxjs";
+import { map, catchError } from "rxjs/operators";
 import { API_ENDPOINTS } from "./api-service.config";
 import { IAPIResponse } from "../models/IAPIResponse";
 import { IApodPhoto } from "../models/IApodPhoto";
 import { IBookmark } from "../models/IBookmark";
+import { ConfigService } from "./config.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class ApiService {
-  private apiUrl = "http://localhost:3000/api/";
+  private http = inject(HttpClient);
+  private config = inject(ConfigService);
 
-  constructor(private http: HttpClient) {}
+  private get bookmarkBase(): string {
+    return (this.config.get()?.bookmarkBaseUrl ?? "").replace(/\/+$/, "");
+  }
+
+  private get apodBase(): string {
+    return (this.config.get()?.apodBaseUrl ?? "").replace(/\/+$/, "");
+  }
 
   private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      "Content-Type": "application/json",
-    });
+    return new HttpHeaders({ "Content-Type": "application/json" });
+  }
+
+  testBookmarkConnection(baseUrl: string): Observable<boolean> {
+    const url = baseUrl.replace(/\/+$/, "");
+    return this.http.get(`${url}/api/bookmarks`, { observe: "response" }).pipe(
+      map((r) => r.status >= 200 && r.status < 300),
+      catchError(() => of(false)),
+    );
+  }
+
+  testApodConnection(baseUrl: string): Observable<boolean> {
+    const url = baseUrl.replace(/\/+$/, "");
+    return this.http.get(`${url}/health`, { observe: "response" }).pipe(
+      map((r) => r.status >= 200 && r.status < 300),
+      catchError(() => of(false)),
+    );
   }
 
   test(body: unknown): Observable<IAPIResponse> {
     return this.http.post<IAPIResponse>(
-      `${this.apiUrl}${API_ENDPOINTS.TEST}`,
+      `${this.bookmarkBase}/api/${API_ENDPOINTS.TEST}`,
       body,
-      {
-        headers: this.getHeaders(),
-      },
+      { headers: this.getHeaders() },
     );
   }
 
   getApodImage(): Observable<IApodPhoto> {
-    return this.http.get<IApodPhoto>(`${this.apiUrl}${API_ENDPOINTS.APOD}`);
+    return this.http.get<IApodPhoto>(
+      `${this.apodBase}/api/${API_ENDPOINTS.APOD}`,
+    );
   }
 
   getBookmarks(): Observable<IBookmark[]> {
     return this.http.get<IBookmark[]>(
-      `${this.apiUrl}${API_ENDPOINTS.BOOKMARKS_GET}`,
+      `${this.bookmarkBase}/api/${API_ENDPOINTS.BOOKMARKS_GET}`,
     );
   }
 
   createBookmark(bookmark: Omit<IBookmark, "id">): Observable<IBookmark> {
     return this.http.post<IBookmark>(
-      `${this.apiUrl}${API_ENDPOINTS.BOOKMARKS_CREATE}`,
+      `${this.bookmarkBase}/api/${API_ENDPOINTS.BOOKMARKS_CREATE}`,
       bookmark,
       { headers: this.getHeaders() },
     );
@@ -53,7 +76,7 @@ export class ApiService {
     changes: Partial<Omit<IBookmark, "id">>,
   ): Observable<IBookmark> {
     return this.http.put<IBookmark>(
-      `${this.apiUrl}${API_ENDPOINTS.BOOKMARKS_UPDATE(id)}`,
+      `${this.bookmarkBase}/api/${API_ENDPOINTS.BOOKMARKS_UPDATE(id)}`,
       changes,
       { headers: this.getHeaders() },
     );
@@ -61,13 +84,13 @@ export class ApiService {
 
   deleteBookmark(id: string): Observable<void> {
     return this.http.delete<void>(
-      `${this.apiUrl}${API_ENDPOINTS.BOOKMARKS_DELETE(id)}`,
+      `${this.bookmarkBase}/api/${API_ENDPOINTS.BOOKMARKS_DELETE(id)}`,
     );
   }
 
   reorderBookmarks(ids: string[]): Observable<IBookmark[]> {
     return this.http.put<IBookmark[]>(
-      `${this.apiUrl}${API_ENDPOINTS.BOOKMARKS_REORDER}`,
+      `${this.bookmarkBase}/api/${API_ENDPOINTS.BOOKMARKS_REORDER}`,
       { ids },
       { headers: this.getHeaders() },
     );

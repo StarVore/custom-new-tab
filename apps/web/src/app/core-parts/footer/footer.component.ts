@@ -4,7 +4,7 @@ import { BgService } from "../../services/bg-service";
 @Component({
   selector: "app-footer",
   templateUrl: "./footer.component.html",
-  styleUrl: "./footer.component.css",
+  styleUrl: "./footer.component.scss",
   standalone: true,
 })
 export class Footer {

@@ -18,7 +18,7 @@ import { BookmarkEditModalComponent } from "../bookmark-edit-modal/bookmark-edit
     BookmarkEditModalComponent,
   ],
   templateUrl: "./bookmarks-grid.html",
-  styleUrl: "./bookmarks-grid.css",
+  styleUrl: "./bookmarks-grid.scss",
 })
 export class BookmarksGridComponent {
   private bookmarkService = inject(BookmarkService);

@@ -4,6 +4,7 @@ import { DOCUMENT } from "@angular/common";
 import { inject, Injectable, signal } from "@angular/core";
 import { IApodPhoto } from "../models/IApodPhoto";
 import { ApiService } from "./api-service";
+import { ConfigService } from "./config.service";
 
 const STORAGE_KEY = "apod_background";
 
@@ -12,6 +13,7 @@ const STORAGE_KEY = "apod_background";
 })
 export class BgService {
   private apiService = inject(ApiService);
+  private configService = inject(ConfigService);
   private document = inject(DOCUMENT);
   readonly photoDetails = signal<IApodPhoto | null>(null);
 
@@ -20,6 +22,10 @@ export class BgService {
     if (cached) {
       this.photoDetails.set(cached);
       this.applyBackground(cached.url);
+      return;
+    }
+
+    if (!this.configService.isConfigured()) {
       return;
     }
 

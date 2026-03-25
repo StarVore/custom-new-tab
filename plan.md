@@ -1,24 +1,23 @@
-# Plan: Publishable Self-Hosted New Tab Platform
+# Plan: Single GitHub Compose Stack
 
 ## TL;DR
 
-Refactor the project into a multi-service layout with one shared frontend and separate backend services. Keep a strict mock backend for development, add a dedicated APOD proxy for real deployments, and use PocketBase for bookmark sync. Add first-run backend configuration in the app so users can self-host services and point clients to their own URLs. Support three frontend distribution targets: Chrome extension, Firefox extension, and LAN-hosted site for devices that do not support extensions. Keep TLS optional via Docker Compose environment variables and user-provided certificate paths.
+Run the LAN-hosted deployment as a single Docker Compose stack containing `web`, `pocketbase`, and `apod-proxy`. Remove the mock server from Compose entirely, keep it only as a standalone local development tool, and have Docker build the web app and APOD proxy directly from the GitHub repository using a configurable branch or tag ref. Keep TLS optional via environment variables and user-provided certificate paths. Keep Chrome and Firefox extension packaging outside Docker.
 
 ---
 
 ## Decisions
 
-- Repository structure becomes app-plus-services:
-- apps/web for Angular frontend
-- services/mock-server for development-only API replacement
-- services/apod-proxy for production APOD fetching
-- services/pocketbase for data persistence and operational scripts
-- Development mode uses mock-server instead of PocketBase
-- Production/LAN mode uses PocketBase for bookmarks and APOD proxy for image metadata
+- Docker Compose becomes a single production-oriented stack with no profile split
+- `mock-server` is removed from Compose and remains a standalone local development tool only
+- `web`, `pocketbase`, and `apod-proxy` ship together in the default stack
+- Docker builds `web` and `apod-proxy` directly from GitHub using configurable repo/ref values
+- PocketBase remains an external image dependency and stays in the same stack
 - First-run setup screen collects:
 - Bookmark backend base URL
 - APOD backend base URL
-- Docker Compose is fully env-configurable:
+- Docker Compose remains env-configurable for:
+- GitHub repo and ref
 - Service ports
 - PUID and PGID
 - Timezone
@@ -26,10 +25,11 @@ Refactor the project into a multi-service layout with one shared frontend and se
 - TLS remains optional:
 - HTTP works out of the box
 - HTTPS enabled only when explicitly configured
-- Frontend target support:
+- Frontend target support remains:
 - Chrome extension
 - Firefox extension
 - LAN-hosted web app for non-extension clients
+- Extension builds remain outside Docker
 - Offline behavior remains cache-first with local persistence and queued mutation replay
 
 ---
@@ -69,29 +69,26 @@ Refactor the project into a multi-service layout with one shared frontend and se
 
 ---
 
-## Phase 4 — Compose Profiles and Environment Variables
+## Phase 4 — Single Stack Compose and Environment Variables
 
-21. Add root docker-compose with profile support:
-22. dev profile:
-23. web-dev
-24. mock-server
-25. prod profile:
-26. web-static
-27. pocketbase
-28. apod-proxy
-29. optional reverse proxy
-30. Add root env template with configurable values:
-31. WEB_PORT
-32. POCKETBASE_PORT
-33. APOD_PROXY_PORT
-34. MOCK_SERVER_PORT
-35. PUID
-36. PGID
-37. TZ
-38. ENABLE_TLS
-39. TLS_CERT_PATH
-40. TLS_KEY_PATH
-41. Apply PUID and PGID mapping where persistent volume writes occur
+21. Remove Compose profile support and define one default production-oriented stack
+22. Exclude `mock-server` from Compose entirely
+23. Keep `web`, `pocketbase`, and `apod-proxy` together under one stack
+24. Build `web` from the GitHub repository instead of the local workspace
+25. Build `apod-proxy` from the GitHub repository instead of the local workspace
+26. Add root env template with configurable values:
+27. GIT_OWNER_REPO
+28. GIT_REF
+29. WEB_PORT
+30. POCKETBASE_PORT
+31. APOD_PROXY_PORT
+32. PUID
+33. PGID
+34. TZ
+35. ENABLE_TLS
+36. TLS_CERT_PATH
+37. TLS_KEY_PATH
+38. Apply PUID and PGID mapping where persistent volume writes occur
 
 ---
 
@@ -135,7 +132,7 @@ Refactor the project into a multi-service layout with one shared frontend and se
 62. Chrome extension
 63. Firefox extension
 64. LAN-hosted site
-65. Document development versus production Compose usage
+65. Document single-stack Compose usage and GitHub-backed builds
 66. Document PocketBase collection schema and required fields
 67. Document first-run backend URL setup values
 68. Add troubleshooting for:
@@ -154,7 +151,6 @@ Refactor the project into a multi-service layout with one shared frontend and se
 - apps/web
 - services/mock-server
 - services/apod-proxy
-- services/pocketbase
 - README.md
 - package.json
 - angular.json
@@ -163,22 +159,24 @@ Refactor the project into a multi-service layout with one shared frontend and se
 
 ## Verification
 
-1. Dev profile starts and app works fully using mock-server only
-2. Prod profile starts and app syncs bookmarks through PocketBase
-3. APOD proxy returns image metadata and handles video-day fallback
-4. First-run setup appears and stores backend URLs
-5. Editing backend URLs later updates service connectivity
-6. Offline mode loads cached app data and replays queued mutations on reconnect
-7. TLS disabled mode works without cert files
-8. TLS enabled mode works with provided cert/key mounts
-9. Chrome extension build is installable and functional
-10. Firefox extension build is installable and functional
-11. LAN-hosted site is reachable on local network and works on devices without extension support
+1. `docker compose config` resolves to only `web`, `pocketbase`, and `apod-proxy`
+2. The `web` image builds successfully from the configured GitHub repo/ref
+3. The `apod-proxy` image builds successfully from the configured GitHub repo/ref
+4. The stack starts and the app syncs bookmarks through PocketBase
+5. APOD proxy returns image metadata and handles video-day fallback
+6. First-run setup appears and stores backend URLs
+7. Editing backend URLs later updates service connectivity
+8. Offline mode loads cached app data and replays queued mutations on reconnect
+9. TLS disabled mode works without cert files
+10. TLS enabled mode works with provided cert/key mounts
+11. Chrome extension build is installable and functional
+12. Firefox extension build is installable and functional
+13. LAN-hosted site is reachable on local network and works on devices without extension support
 
 ---
 
 ## Further Considerations
 
-1. Reverse proxy choice: Caddy for simpler optional TLS setup, or nginx for tighter manual control
-2. Extension packaging conventions: output structure and release artifact naming
-3. Migration strategy: one structural refactor first, then service split and setup UX in follow-up work to reduce risk
+1. Pin `GIT_REF` to a tag or commit for reproducible deployments instead of tracking `main`
+2. If Compose remote Git contexts prove too limiting, fall back to CI-built images and registry pulls
+3. Extension packaging conventions: output structure and release artifact naming

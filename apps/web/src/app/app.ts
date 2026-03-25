@@ -1,18 +1,16 @@
 import { Component, OnInit, signal, inject, isDevMode } from "@angular/core";
-import { Footer } from "./core-parts/footer/footer.component";
+import { RouterOutlet } from "@angular/router";
 import { BgService } from "./services/bg-service";
-import { BookmarksGridComponent } from "./core-parts/bookmarks-grid/bookmarks-grid";
 import { SwUpdate, VersionReadyEvent } from "@angular/service-worker";
 import { filter } from "rxjs";
 
 @Component({
   selector: "app-root",
-  imports: [Footer, BookmarksGridComponent],
+  imports: [RouterOutlet],
   templateUrl: "./app.html",
-  styleUrl: "./app.css",
+  styleUrl: "./app.scss",
 })
 export class App implements OnInit {
-  protected readonly title = signal("CustomNewTab");
   readonly updateAvailable = signal(false);
 
   private bgService = inject(BgService);

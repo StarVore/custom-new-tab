@@ -5,6 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:chrome": "ng build --configuration chrome",
+    "build:firefox": "ng build --configuration firefox",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "mock:start": "node services/mock-server/server.js",
@@ -12,7 +14,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,html,css,json,md}": "prettier --write"
+    "*.{ts,html,scss,json,md}": "prettier --write"
   },
   "private": true,
   "packageManager": "npm@11.11.0",
@@ -35,12 +37,10 @@
     "@angular/build": "^21.2.3",
     "@angular/cli": "^21.2.3",
     "@angular/compiler-cli": "^21.2.0",
-    "@tailwindcss/postcss": "^4.1.12",
     "husky": "^9.1.7",
     "jsdom": "^28.0.0",
     "lint-staged": "^16.4.0",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.12",
+    "sass": "^1.98.0",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8",

@@ -6,12 +6,7 @@
       "name": "app-shell",
       "installMode": "prefetch",
       "resources": {
-        "files": [
-          "/favicon.ico",
-          "/index.html",
-          "/*.css",
-          "/*.js"
-        ]
+        "files": ["/favicon.ico", "/index.html", "/*.css", "/*.js"]
       }
     },
     {
@@ -19,43 +14,14 @@
       "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
-        "files": [
-          "/assets/**"
-        ]
+        "files": ["/assets/**"]
       }
     }
   ],
   "dataGroups": [
     {
-      "name": "bookmarks-api",
-      "urls": [
-        "http://localhost:3000/api/bookmarks",
-        "http://localhost:3000/api/bookmarks/**"
-      ],
-      "cacheConfig": {
-        "strategy": "freshness",
-        "maxSize": 50,
-        "maxAge": "7d",
-        "timeout": "3s"
-      }
-    },
-    {
-      "name": "apod-api",
-      "urls": [
-        "http://localhost:3000/api/apod"
-      ],
-      "cacheConfig": {
-        "strategy": "freshness",
-        "maxSize": 5,
-        "maxAge": "1d",
-        "timeout": "5s"
-      }
-    },
-    {
       "name": "favicons",
-      "urls": [
-        "https://www.google.com/s2/favicons/**"
-      ],
+      "urls": ["https://www.google.com/s2/favicons/**"],
       "cacheConfig": {
         "strategy": "performance",
         "maxSize": 100,

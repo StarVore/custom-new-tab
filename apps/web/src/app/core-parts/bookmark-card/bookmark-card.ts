@@ -6,7 +6,7 @@ import { CdkDrag } from "@angular/cdk/drag-drop";
   selector: "app-bookmark-card",
   imports: [CdkDrag],
   templateUrl: "./bookmark-card.html",
-  styleUrl: "./bookmark-card.css",
+  styleUrl: "./bookmark-card.scss",
 })
 export class BookmarkCardComponent {
   bookmark = input.required<IBookmark>();

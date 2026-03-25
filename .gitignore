@@ -17,6 +17,9 @@
 # Environment files
 /.env
 
+# TLS certificates
+/certs/*.pem
+
 # Angular CLI and build artefacts
 /.angular-cli.json
 /.ng/

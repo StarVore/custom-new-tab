@@ -18,7 +18,7 @@ import { IBookmark } from "../../models/IBookmark";
   selector: "app-bookmark-edit-modal",
   imports: [ReactiveFormsModule],
   templateUrl: "./bookmark-edit-modal.html",
-  styleUrl: "./bookmark-edit-modal.css",
+  styleUrl: "./bookmark-edit-modal.scss",
 })
 export class BookmarkEditModalComponent implements OnInit {
   // null = add mode, IBookmark = edit mode

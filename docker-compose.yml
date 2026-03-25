@@ -1,0 +1,53 @@
+# Custom New Tab — Docker Compose
+#
+# Usage:
+#   docker compose up -d --build
+#
+# Compose builds the web and APOD proxy directly from the GitHub repository.
+# Copy .env.example to .env and adjust values before starting.
+
+services:
+
+  # Single production-oriented stack.
+  # Point the app setup to http://<host>:${POCKETBASE_PORT} for bookmarks
+  # and http://<host>:${APOD_PROXY_PORT} for APOD.
+
+  web:
+    build:
+      context: https://github.com/${GIT_OWNER_REPO:-StarVore/custom-new-tab}.git#${GIT_REF:-main}
+      dockerfile: apps/web/Dockerfile
+    environment:
+      ENABLE_TLS: "${ENABLE_TLS:-false}"
+    ports:
+      - "${WEB_PORT:-80}:80"
+      - "${WEB_TLS_PORT:-443}:443"
+    volumes:
+      - "${TLS_CERT_PATH:-./certs/cert.pem}:/etc/nginx/certs/cert.pem:ro"
+      - "${TLS_KEY_PATH:-./certs/key.pem}:/etc/nginx/certs/key.pem:ro"
+    restart: unless-stopped
+
+  pocketbase:
+    image: ghcr.io/pocketbase/pocketbase:latest
+    command: ["./pocketbase", "serve", "--http=0.0.0.0:8090"]
+    ports:
+      - "${POCKETBASE_PORT:-8090}:8090"
+    volumes:
+      - pocketbase_data:/pb_data
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      TZ: "${TZ:-UTC}"
+    restart: unless-stopped
+
+  apod-proxy:
+    build:
+      context: https://github.com/${GIT_OWNER_REPO:-StarVore/custom-new-tab}.git#${GIT_REF:-main}
+      dockerfile: services/apod-proxy/Dockerfile
+    environment:
+      PORT: "3001"
+      TZ: "${TZ:-UTC}"
+    ports:
+      - "${APOD_PROXY_PORT:-3001}:3001"
+    restart: unless-stopped
+
+volumes:
+  pocketbase_data:

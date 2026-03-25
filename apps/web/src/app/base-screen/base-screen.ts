@@ -7,7 +7,7 @@ import { IAPIResponse } from "../models/IAPIResponse";
   standalone: true,
   imports: [],
   templateUrl: "./base-screen.html",
-  styleUrl: "./base-screen.css",
+  styleUrl: "./base-screen.scss",
 })
 export class BaseScreen implements OnInit {
   testSuccess: boolean | null = null;

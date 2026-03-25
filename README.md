@@ -1,179 +1,211 @@
 # Custom New Tab
 
-Custom New Tab is an Angular-based browser start page focused on quick access bookmarks and a dynamic NASA APOD background. It is designed to feel like a lightweight dashboard: a centered, reorderable shortcuts grid on top of a full-screen background image, plus an expandable bottom sheet with details about the current background.
+A self-hosted new tab page with bookmarks and a NASA APOD background. Runs as a Chrome extension, Firefox extension, or a LAN-hosted web app for devices that do not support extensions.
+
+---
+
+## How it works
+
+The frontend is a single Angular app shared across all three deployment targets. On first launch, a setup screen collects the URLs of your two backend services:
+
+| Service        | Purpose                                       | Default port |
+| -------------- | --------------------------------------------- | ------------ |
+| **PocketBase** | Bookmark storage and sync                     | `8090`       |
+| **APOD proxy** | Fetches the NASA Astronomy Picture of the Day | `3001`       |
+
+Bookmarks are cached locally in `localStorage` and synced to PocketBase. Failed writes are queued and replayed when the connection is restored. The APOD background is cached for the current day so it only fetches once per day.
+
+---
 
 ## Features
 
 - Reorderable bookmark grid with drag-and-drop
 - Add, edit, and delete bookmarks
-- Responsive layout that fits more bookmarks on larger screens
-- Same-tab bookmark navigation
-- Daily NASA APOD background image
-- Expandable "About Background" footer sheet
-- Local bookmark caching for quick reloads
-- PWA/service worker support for offline usage and cached assets
-- Mock API server for local development
+- Responsive layout (2–6 columns depending on screen width)
+- Daily NASA APOD full-screen background
+- Expandable "About Background" footer sheet with explanation text
+- Local-first caching: grid renders instantly from `localStorage`, syncs to backend in the background
+- Offline mutation queue: writes made offline are replayed automatically on reconnect
+- First-run setup flow to configure backend URLs
+- In-app settings to update URLs when hosts change
+- PWA / service worker for app-shell caching (LAN-hosted target)
+- Chrome extension, Firefox extension, and LAN-hosted web app build targets
 
-## Screenshots
+---
 
-### Desktop
+## Development
 
-![Desktop screenshot](docs/images/desktop.png)
-
-### Mobile
-
-![Mobile screenshot](docs/images/mobile.png)
-
-### Add Bookmark
-
-![Add bookmark screenshot](docs/images/add_bookmark.png)
-
-## Tech Stack
-
-- Angular 21
-- Angular CDK drag-and-drop
-- Angular service worker
-- RxJS
-- Tailwind CSS
-- Node mock server for local API responses
-
-## Project Structure
-
-Key parts of the app:
-
-- `apps/web/src/app/bookmarks-grid/` - responsive bookmark grid and drag/drop behavior
-- `apps/web/src/app/bookmark-card/` - individual bookmark tile
-- `apps/web/src/app/bookmark-edit-modal/` - add/edit bookmark dialog
-- `apps/web/src/app/services/bookmark.service.ts` - bookmark state, API sync, and local cache
-- `apps/web/src/app/services/bg-service.ts` - APOD background fetch/cache/apply logic
-- `apps/web/src/app/core-parts/footer/` - expandable background details sheet
-- `services/mock-server/server.js` - local API endpoints for bookmarks and APOD (dev only)
-- `services/apod-proxy/server.js` - dedicated APOD proxy service scaffold
-- `ngsw-config.json` - offline caching configuration
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js
-- npm
-
-### Install dependencies
+**Requirements:** Node.js 20+, npm 11+
 
 ```bash
+# Install dependencies
 npm install
-```
 
-## Running Locally
-
-This app expects both the Angular dev server and the local mock API server.
-
-### 1. Start the mock API server
-
-```bash
+# Start the mock server (replaces both PocketBase and the APOD proxy)
 npm run mock:start
-```
 
-The mock server runs on `http://localhost:3000`.
-
-### 2. Start the Angular app
-
-```bash
+# In a second terminal, start the Angular dev server
 npm start
 ```
 
-The app runs on `http://localhost:4200`.
+Open `http://localhost:4200`. On first run the setup screen appears — enter `http://localhost:3000` for both service URLs and click **Save & Continue**.
 
-## Available Scripts
+The mock server is a standalone local development tool only. It is not part of Docker Compose.
 
-### `npm start`
+The mock server provides:
 
-Runs the Angular development server.
+- `GET  /api/bookmarks` — in-memory bookmark list
+- `POST /api/bookmarks` — create bookmark
+- `PUT  /api/bookmarks/:id` — update bookmark
+- `DELETE /api/bookmarks/:id` — delete bookmark
+- `PUT  /api/bookmarks/reorder` — reorder bookmarks
+- `GET  /api/apod` — static dev APOD response (no network requests)
+- `GET  /health` — liveness check
 
-### `npm run mock:start`
+---
 
-Runs the local mock server that provides:
+## Production / LAN deployment
 
-- `GET /api/bookmarks`
-- `POST /api/bookmarks`
-- `PUT /api/bookmarks/:id`
-- `DELETE /api/bookmarks/:id`
-- `PUT /api/bookmarks/reorder`
-- `GET /api/apod`
-
-### `npm run build`
-
-Creates a production build in `dist/CustomNewTab`.
-
-### `npm run watch`
-
-Runs Angular build watch mode.
-
-### `npm test`
-
-Runs the test suite.
-
-## Offline / PWA Behavior
-
-The app includes service worker support so the shell and key cached data remain available offline.
-
-What is cached:
-
-- Application shell assets
-- Bookmark API responses
-- APOD API responses
-- Favicon requests
-
-The bookmark layer also uses local storage so the grid can render quickly before API responses return.
-
-To test the PWA behavior:
+**Requirements:** Docker and Docker Compose
 
 ```bash
-npm run build
+# 1. Copy the example env file and adjust values
+cp .env.example .env
+
+# 2. Start the stack and build directly from GitHub
+docker compose up -d --build
 ```
 
-Then serve the production build from the generated output directory using a static server of your choice.
+This starts one stack with three services:
 
-Example:
+- **web** — nginx serving the built Angular app (port `$WEB_PORT`, default `80`)
+- **pocketbase** — bookmark persistence (port `$POCKETBASE_PORT`, default `8090`)
+- **apod-proxy** — live APOD image fetcher (port `$APOD_PROXY_PORT`, default `3001`)
+
+The `web` and `apod-proxy` images are built by Docker directly from the GitHub repository configured in `.env`:
+
+- `GIT_OWNER_REPO` — GitHub `owner/repo`
+- `GIT_REF` — branch, tag, or commit ref to build
+
+Open `http://<your-server-ip>` in a browser. The setup screen asks for the two service URLs:
+
+- **Bookmark service:** `http://<your-server-ip>:8090`
+- **APOD service:** `http://<your-server-ip>:3001`
+
+The configuration is stored in `localStorage` per device — complete setup once per browser.
+
+### Optional HTTPS
+
+Add to your `.env` and restart:
+
+```env
+ENABLE_TLS=true
+TLS_CERT_PATH=/path/to/cert.pem
+TLS_KEY_PATH=/path/to/key.pem
+```
+
+The nginx container mounts the certificate and key read-only, redirects HTTP → HTTPS, and terminates TLS at port `$WEB_TLS_PORT` (default `443`). If the cert/key files are missing or empty, the container automatically falls back to HTTP.
+
+---
+
+## Chrome extension
 
 ```bash
-npx serve dist/CustomNewTab/browser
+npm run build:chrome
 ```
 
-After that, open the app in a browser and use DevTools to simulate offline mode.
+Output: `dist/CustomNewTab/browser/`
 
-## Bookmark Behavior
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked** → select `dist/CustomNewTab/browser/`
 
-Bookmarks support the following actions:
+---
 
-- Open a site in the current tab
-- Drag to reorder
-- Edit title, URL, and optional custom image URL
-- Delete existing entries
-- Add new entries
+## Firefox extension
 
-If no custom image is supplied, the app falls back to a favicon based on the bookmark URL.
+```bash
+npm run build:firefox
+```
 
-## Background Behavior
+Output: `dist/CustomNewTab/browser/`
 
-The page background comes from NASA APOD data returned by the mock server.
+**Temporary load (testing):**
 
-The background details sheet shows:
+1. Open `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on…** → select `dist/CustomNewTab/browser/manifest.json`
 
-- Explanation text
-- Link to the APOD page when available
+**Permanent install:** Zip the output folder and submit to [addons.mozilla.org](https://addons.mozilla.org). Update the `gecko.id` in `apps/web/extension/firefox/manifest.json` to a unique identifier before submitting.
 
-## Notes for Development
+---
 
-- The APOD background is cached in browser storage
-- Bookmark data is cached locally and synced with the API layer
-- The footer is implemented as a bottom sheet across screen sizes
-- Production builds enable service worker updates
+## PocketBase collection schema
 
-## Future Documentation Placeholders
+After starting PocketBase for the first time, create a collection named **`bookmarks`** with these fields:
 
-Placeholder: Browser extension packaging instructions
+| Field            | Type   | Required |
+| ---------------- | ------ | -------- |
+| `title`          | Text   | ✓        |
+| `url`            | URL    | ✓        |
+| `order`          | Number | ✓        |
+| `customImageUrl` | URL    | —        |
 
-Placeholder: Deployment instructions
+Set the collection API rules to allow read/write without authentication (or configure token-based access if you want access control).
 
-Placeholder: Screenshot asset locations once added to the repo
+> PocketBase admin UI: `http://<your-server>:8090/_/`
+
+---
+
+## Environment variables
+
+| Variable          | Default                   | Description                                       |
+| ----------------- | ------------------------- | ------------------------------------------------- |
+| `GIT_OWNER_REPO`  | `StarVore/custom-new-tab` | GitHub repository used as the Docker build source |
+| `GIT_REF`         | `main`                    | Branch, tag, or commit ref to build from          |
+| `WEB_PORT`        | `80`                      | Host port for the web service (HTTP)              |
+| `WEB_TLS_PORT`    | `443`                     | Host port for the web service (HTTPS)             |
+| `POCKETBASE_PORT` | `8090`                    | Host port for PocketBase                          |
+| `APOD_PROXY_PORT` | `3001`                    | Host port for the APOD proxy                      |
+| `PUID`            | `1000`                    | UID for PocketBase volume writes                  |
+| `PGID`            | `1000`                    | GID for PocketBase volume writes                  |
+| `TZ`              | `UTC`                     | Timezone                                          |
+| `ENABLE_TLS`      | `false`                   | Set `true` to enable HTTPS                        |
+| `TLS_CERT_PATH`   | `./certs/cert.pem`        | Host path to TLS certificate                      |
+| `TLS_KEY_PATH`    | `./certs/key.pem`         | Host path to TLS private key                      |
+
+---
+
+## Troubleshooting
+
+**Setup screen reappears on every visit**
+Backend URLs are stored in `localStorage` per browser. Each browser or device must complete setup once.
+
+**"Could not connect" on the test button**
+
+- Verify the service is running: `docker compose ps`
+- Check the port is reachable from your device (firewall, VPN, or subnet)
+- If the frontend is served over HTTPS but backend URLs are HTTP, the browser may block mixed-content requests — serve everything over HTTPS or keep both over HTTP
+
+**CORS errors in the browser console**
+Both the mock server and APOD proxy return `Access-Control-Allow-Origin: *`. CORS errors usually mean the request is reaching the wrong host or port — double-check the URLs in Settings (⚙ icon on the home screen).
+
+**Bookmarks not syncing after reconnect**
+Failed writes are queued in `localStorage` under `bookmark_pending_mutations` and replayed when the browser fires the `online` event. To inspect or clear the queue manually, use DevTools → Application → Local Storage.
+
+**TLS enabled but the site still serves HTTP**
+
+- Confirm `ENABLE_TLS=true` in `.env`
+- Confirm cert and key files are non-empty at the configured paths
+- Recreate the container: `docker compose up -d --build --force-recreate web`
+
+**Stale APOD background**
+The background is cached for the current day under `apod_background` in `localStorage`. To force a refresh: `localStorage.removeItem('apod_background')` in the browser console, then reload.
+
+**APOD proxy returns no image**
+The proxy walks back up to 5 days when the current day is a video. If it still fails, check network access from the proxy container to `apod.nasa.gov`.
+
+**Docker build is not using the version I expect**
+
+- Check `GIT_OWNER_REPO` and `GIT_REF` in `.env`
+- Rebuild explicitly: `docker compose build --no-cache`
+- Pin `GIT_REF` to a tag or commit if you need reproducible deployments

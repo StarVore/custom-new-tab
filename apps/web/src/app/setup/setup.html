@@ -1,0 +1,80 @@
+<div class="setup-page">
+  <div class="setup-card">
+    <h1 class="setup-title">Welcome to Custom New Tab</h1>
+    <p class="setup-subtitle">
+      Point the app to your self-hosted backend services to get started.
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="save()" class="setup-form">
+      <!-- Bookmark service -->
+      <div class="setup-section">
+        <h2 class="section-title">Bookmark Service</h2>
+        <p class="section-description">
+          Base URL of your PocketBase instance (e.g.
+          <code>http://192.168.1.10:8090</code>)
+        </p>
+        <div class="input-row">
+          <input
+            class="url-input"
+            formControlName="bookmarkBaseUrl"
+            type="url"
+            placeholder="http://192.168.1.10:8090"
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="test-btn"
+            (click)="testBookmark()"
+            [disabled]="!form.get('bookmarkBaseUrl')?.value || bookmarkTestState() === 'testing'"
+          >
+            @if (bookmarkTestState() === 'testing') { Testing… } @else { Test }
+          </button>
+        </div>
+        @if (bookmarkTestState() === 'ok') {
+        <p class="status ok">✓ Connected</p>
+        } @else if (bookmarkTestState() === 'fail') {
+        <p class="status fail">
+          ✗ Could not connect — check the URL and ensure the service is running
+        </p>
+        }
+      </div>
+
+      <!-- APOD service -->
+      <div class="setup-section">
+        <h2 class="section-title">APOD Service</h2>
+        <p class="section-description">
+          Base URL of your APOD proxy instance (e.g.
+          <code>http://192.168.1.10:3001</code>)
+        </p>
+        <div class="input-row">
+          <input
+            class="url-input"
+            formControlName="apodBaseUrl"
+            type="url"
+            placeholder="http://192.168.1.10:3001"
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            class="test-btn"
+            (click)="testApod()"
+            [disabled]="!form.get('apodBaseUrl')?.value || apodTestState() === 'testing'"
+          >
+            @if (apodTestState() === 'testing') { Testing… } @else { Test }
+          </button>
+        </div>
+        @if (apodTestState() === 'ok') {
+        <p class="status ok">✓ Connected</p>
+        } @else if (apodTestState() === 'fail') {
+        <p class="status fail">
+          ✗ Could not connect — check the URL and ensure the service is running
+        </p>
+        }
+      </div>
+
+      <button type="submit" class="save-btn" [disabled]="form.invalid">
+        Save &amp; Continue
+      </button>
+    </form>
+  </div>
+</div>
