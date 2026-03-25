@@ -1,0 +1,29 @@
+<section class="bookmarks-section">
+  <div
+    cdkDropListGroup
+    class="bookmarks-grid"
+    cdkDropList
+    cdkDropListOrientation="mixed"
+    [cdkDropListData]="bookmarks()"
+    (cdkDropListDropped)="onDrop($event)"
+  >
+    @for (bookmark of bookmarks(); track bookmark.id) {
+      <app-bookmark-card
+        [bookmark]="bookmark"
+        (edit)="openEdit($event)"
+        (delete)="onDelete($event)"
+      />
+    }
+    <button class="add-bookmark-btn" (click)="openAdd()" type="button" title="Add bookmark">
+      <span class="add-icon">+</span>
+    </button>
+  </div>
+</section>
+
+@if (isModalOpen()) {
+  <app-bookmark-edit-modal
+    [bookmark]="editingBookmark()"
+    (save)="onModalSave($event)"
+    (cancel)="onModalCancel()"
+  />
+}

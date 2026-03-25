@@ -49,6 +49,112 @@ async function fetchApod(req, res) {
     }
 }
 
+// --- Bookmark in-memory store ---
+let bookmarks = [
+    { id: '1', title: 'GitHub', url: 'https://github.com', order: 0 },
+    { id: '2', title: 'YouTube', url: 'https://youtube.com', order: 1 },
+    { id: '3', title: 'Google', url: 'https://google.com', order: 2 },
+    { id: '4', title: 'Gmail', url: 'https://mail.google.com', order: 3 },
+];
+let nextBookmarkId = 5;
+
+function readBody(req) {
+    return new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', chunk => (data += chunk));
+        req.on('end', () => {
+            try { resolve(JSON.parse(data || '{}')); }
+            catch (e) { reject(e); }
+        });
+    });
+}
+
+async function handleBookmarks(req, res) {
+    const url = req.url;
+    const method = req.method;
+
+    // PUT /api/bookmarks/reorder — must be checked before /:id
+    if (method === 'PUT' && url === '/api/bookmarks/reorder') {
+        const body = await readBody(req);
+        const ids = body.ids;
+        if (!Array.isArray(ids)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'ids must be an array' }));
+            return;
+        }
+        ids.forEach((id, index) => {
+            const bm = bookmarks.find(b => b.id === String(id));
+            if (bm) bm.order = index;
+        });
+        bookmarks.sort((a, b) => a.order - b.order);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(bookmarks));
+        return;
+    }
+
+    // GET /api/bookmarks
+    if (method === 'GET' && url === '/api/bookmarks') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify([...bookmarks].sort((a, b) => a.order - b.order)));
+        return;
+    }
+
+    // POST /api/bookmarks
+    if (method === 'POST' && url === '/api/bookmarks') {
+        const body = await readBody(req);
+        const newBookmark = {
+            id: String(nextBookmarkId++),
+            title: body.title || '',
+            url: body.url || '',
+            order: typeof body.order === 'number' ? body.order : bookmarks.length,
+            ...(body.customImageUrl ? { customImageUrl: body.customImageUrl } : {}),
+        };
+        bookmarks.push(newBookmark);
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(newBookmark));
+        return;
+    }
+
+    // PUT /api/bookmarks/:id
+    const putMatch = url.match(/^\/api\/bookmarks\/([^/]+)$/);
+    if (method === 'PUT' && putMatch) {
+        const id = putMatch[1];
+        const bm = bookmarks.find(b => b.id === id);
+        if (!bm) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Bookmark not found' }));
+            return;
+        }
+        const body = await readBody(req);
+        if (body.title !== undefined) bm.title = body.title;
+        if (body.url !== undefined) bm.url = body.url;
+        if (body.customImageUrl !== undefined) bm.customImageUrl = body.customImageUrl;
+        if (body.order !== undefined) bm.order = body.order;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(bm));
+        return;
+    }
+
+    // DELETE /api/bookmarks/:id
+    const deleteMatch = url.match(/^\/api\/bookmarks\/([^/]+)$/);
+    if (method === 'DELETE' && deleteMatch) {
+        const id = deleteMatch[1];
+        const index = bookmarks.findIndex(b => b.id === id);
+        if (index === -1) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Bookmark not found' }));
+            return;
+        }
+        bookmarks.splice(index, 1);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+        return;
+    }
+
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+}
+
 // Add mock routes here:
 // - { method, path, file }    serves a static JSON file from the JSONs folder
 // - { method, path, handler } calls a custom async handler function
@@ -78,6 +184,12 @@ const server = http.createServer(function (req, res) {
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
+        return;
+    }
+
+    // Bookmark routes
+    if (req.url.startsWith('/api/bookmarks')) {
+        handleBookmarks(req, res);
         return;
     }
 

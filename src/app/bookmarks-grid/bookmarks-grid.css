@@ -1,0 +1,99 @@
+.bookmarks-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 12rem);
+  padding: 48px 16px 20px;
+}
+
+.bookmarks-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: minmax(110px, auto);
+  gap: 14px;
+  max-height: calc(3 * 110px + 2 * 14px + 8px);
+  overflow-y: auto;
+  width: 100%;
+  max-width: 920px;
+  padding: 4px;
+  /* scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+@media (max-width: 1199px) {
+  .bookmarks-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    max-width: 780px;
+  }
+}
+
+@media (max-width: 920px) {
+  .bookmarks-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 640px;
+    max-height: min(70vh, calc(4 * 110px + 3 * 14px + 8px));
+  }
+}
+
+@media (max-width: 680px) {
+  .bookmarks-section {
+    min-height: calc(100vh - 9rem);
+    padding-top: 24px;
+  }
+
+  .bookmarks-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 100%;
+    max-height: min(74vh, calc(5 * 110px + 4 * 14px + 8px));
+  }
+}
+
+@media (max-width: 440px) {
+  .bookmarks-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: min(78vh, calc(6 * 110px + 5 * 14px + 8px));
+  }
+}
+
+.bookmarks-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.bookmarks-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.add-bookmark-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.add-bookmark-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.add-icon {
+  line-height: 1;
+}
+
+/* CDK list reorder animation */
+.bookmarks-grid.cdk-drop-list-dragging app-bookmark-card:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
+}

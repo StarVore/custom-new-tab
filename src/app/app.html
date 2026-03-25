@@ -1,7 +1,12 @@
 <main class="min-h-screen pb-32 md:pb-36">
-  <h1>Custom New Tab</h1>
-  <app-base-screen></app-base-screen>
+  <app-bookmarks-grid></app-bookmarks-grid>
   <app-footer></app-footer>
 </main>
 
-<router-outlet />
+@if (updateAvailable()) {
+  <div class="update-banner">
+    A new version is available.
+    <button (click)="reloadPage()" type="button">Reload</button>
+  </div>
+}
+

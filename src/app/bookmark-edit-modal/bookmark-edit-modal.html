@@ -1,0 +1,67 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="modal-panel" role="dialog" aria-modal="true">
+    <h2 class="modal-title">{{ isEditMode ? 'Edit Bookmark' : 'Add Bookmark' }}</h2>
+
+    <div class="favicon-preview-row">
+      @if (faviconPreview()) {
+        <img
+          [src]="faviconPreview()"
+          alt="Favicon preview"
+          class="favicon-preview"
+          width="48"
+          height="48"
+        />
+      } @else {
+        <div class="favicon-placeholder">🌐</div>
+      }
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="modal-form">
+      <label class="field">
+        <span class="field-label">Title <span class="required">*</span></span>
+        <input
+          class="field-input"
+          formControlName="title"
+          type="text"
+          placeholder="e.g. GitHub"
+          autocomplete="off"
+        />
+        @if (form.get('title')?.invalid && form.get('title')?.touched) {
+          <span class="field-error">Title is required</span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field-label">URL <span class="required">*</span></span>
+        <input
+          class="field-input"
+          formControlName="url"
+          type="url"
+          placeholder="https://example.com"
+          autocomplete="off"
+        />
+        @if (form.get('url')?.invalid && form.get('url')?.touched) {
+          <span class="field-error">A valid URL is required</span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field-label">Custom Image URL <span class="optional">(optional)</span></span>
+        <input
+          class="field-input"
+          formControlName="customImageUrl"
+          type="url"
+          placeholder="https://example.com/icon.png"
+          autocomplete="off"
+        />
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-cancel" (click)="onCancel()">Cancel</button>
+        <button type="submit" class="btn btn-save">
+          {{ isEditMode ? 'Save Changes' : 'Add Bookmark' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

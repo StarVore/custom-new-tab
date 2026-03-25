@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, signal } from "@angular/core";
 import { IApodPhoto } from "../../models/IApodPhoto";
 
 @Component({
@@ -9,11 +9,19 @@ import { IApodPhoto } from "../../models/IApodPhoto";
 })
 export class Footer implements OnInit {
   photoDetails: IApodPhoto | null = null;
+  protected readonly mobileSheetOpen = signal(false);
 
   ngOnInit(): void {
     this.photoDetails = JSON.parse(
       localStorage.getItem("apod_background") || "null",
     );
-    console.log("Loaded photo details for footer:", this.photoDetails);
+  }
+
+  toggleMobileSheet(): void {
+    this.mobileSheetOpen.update((value) => !value);
+  }
+
+  closeMobileSheet(): void {
+    this.mobileSheetOpen.set(false);
   }
 }

@@ -1,0 +1,38 @@
+<a
+  cdkDrag
+  cdkDragBoundary=".bookmarks-grid"
+  [href]="bookmark().url"
+  class="bookmark-card"
+>
+  <div class="bookmark-drag-handle" cdkDragHandle>
+    <span class="drag-dots">⠿</span>
+  </div>
+
+  <div class="bookmark-actions">
+    <button
+      class="action-btn edit-btn"
+      title="Edit"
+      (click)="onEdit($event)"
+      type="button"
+    >
+      ✏️
+    </button>
+    <button
+      class="action-btn delete-btn"
+      title="Delete"
+      (click)="onDelete($event)"
+      type="button"
+    >
+      ✕
+    </button>
+  </div>
+
+  <img
+    [src]="getFaviconUrl()"
+    [alt]="bookmark().title + ' icon'"
+    class="bookmark-icon"
+    width="48"
+    height="48"
+  />
+  <span class="bookmark-title">{{ bookmark().title }}</span>
+</a>
