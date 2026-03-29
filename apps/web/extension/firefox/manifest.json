@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Custom New Tab",
+  "name": "NASA APOD Custom New Tab",
   "version": "1.0.0",
   "description": "A customisable new tab page with bookmarks and NASA APOD background.",
   "chrome_url_overrides": {
@@ -8,7 +8,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "custom-new-tab@example.com",
+      "id": "nasa-apod-custom-new-tab@starvorelabs",
       "strict_min_version": "109.0"
     }
   },
