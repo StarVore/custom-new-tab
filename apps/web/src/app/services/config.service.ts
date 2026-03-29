@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from "@angular/core";
+import { Injectable, signal, computed, inject } from "@angular/core";
+import { ExtensionStorageService } from "./extension-storage.service";
 
 export interface AppConfig {
   bookmarkBaseUrl: string;
@@ -11,33 +12,35 @@ const CONFIG_KEY = "app_config";
   providedIn: "root",
 })
 export class ConfigService {
-  private readonly _config = signal<AppConfig | null>(this.loadFromStorage());
+  private readonly storage = inject(ExtensionStorageService);
+  private readonly _config = signal<AppConfig | null>(null);
 
   readonly isConfigured = computed(() => this._config() !== null);
+
+  constructor() {
+    void this.loadFromStorage();
+  }
 
   get(): AppConfig | null {
     return this._config();
   }
 
   save(config: AppConfig): void {
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     this._config.set(config);
+    void this.storage.setJson(CONFIG_KEY, config);
   }
 
   clear(): void {
-    localStorage.removeItem(CONFIG_KEY);
     this._config.set(null);
+    void this.storage.remove(CONFIG_KEY);
   }
 
-  private loadFromStorage(): AppConfig | null {
-    try {
-      const raw = localStorage.getItem(CONFIG_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as AppConfig;
-      if (!parsed.bookmarkBaseUrl || !parsed.apodBaseUrl) return null;
-      return parsed;
-    } catch {
-      return null;
+  private async loadFromStorage(): Promise<void> {
+    const parsed = await this.storage.getJson<AppConfig>(CONFIG_KEY);
+    if (!parsed?.bookmarkBaseUrl || !parsed?.apodBaseUrl) {
+      this._config.set(null);
+      return;
     }
+    this._config.set(parsed);
   }
 }

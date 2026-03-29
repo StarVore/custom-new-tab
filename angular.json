@@ -63,6 +63,11 @@
                   "input": "apps/web/public"
                 },
                 {
+                  "glob": "**/*",
+                  "input": "apps/web/extension/chrome/icons",
+                  "output": "/icons"
+                },
+                {
                   "glob": "manifest.json",
                   "input": "apps/web/extension/chrome",
                   "output": "/"
@@ -81,6 +86,11 @@
                 {
                   "glob": "**/*",
                   "input": "apps/web/public"
+                },
+                {
+                  "glob": "**/*",
+                  "input": "apps/web/extension/firefox/icons",
+                  "output": "/icons"
                 },
                 {
                   "glob": "manifest.json",

@@ -5,6 +5,7 @@ import { effect, inject, Injectable, signal } from "@angular/core";
 import { IApodPhoto } from "../models/IApodPhoto";
 import { ApiService } from "./api-service";
 import { ConfigService } from "./config.service";
+import { ExtensionStorageService } from "./extension-storage.service";
 
 const STORAGE_KEY = "apod_background";
 
@@ -14,6 +15,7 @@ const STORAGE_KEY = "apod_background";
 export class BgService {
   private apiService = inject(ApiService);
   private configService = inject(ConfigService);
+  private storage = inject(ExtensionStorageService);
   private document = inject(DOCUMENT);
   readonly photoDetails = signal<IApodPhoto | null>(null);
 
@@ -27,12 +29,12 @@ export class BgService {
         return;
       }
 
-      this.loadBackground();
+      void this.loadBackground();
     });
   }
 
-  loadBackground(): void {
-    const cached = this.getCachedPhoto();
+  async loadBackground(): Promise<void> {
+    const cached = await this.getCachedPhoto();
     if (cached) {
       this.photoDetails.set(cached);
       this.applyBackground(cached.url);
@@ -45,7 +47,7 @@ export class BgService {
 
     this.apiService.getApodImage().subscribe({
       next: (photo) => {
-        this.cachePhoto(photo);
+        void this.cachePhoto(photo);
         this.photoDetails.set(photo);
         this.applyBackground(photo.url);
       },
@@ -53,11 +55,10 @@ export class BgService {
     });
   }
 
-  getCachedPhoto(): IApodPhoto | null {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
+  async getCachedPhoto(): Promise<IApodPhoto | null> {
+    const cached = await this.storage.getJson<IApodPhoto>(STORAGE_KEY);
+    if (!cached) return null;
     try {
-      const cached: IApodPhoto = JSON.parse(raw);
       const fetchedAt = new Date(cached.fetchedAt);
       const today = new Date();
       const isSameDay =
@@ -70,8 +71,8 @@ export class BgService {
     }
   }
 
-  private cachePhoto(photo: IApodPhoto): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(photo));
+  private async cachePhoto(photo: IApodPhoto): Promise<void> {
+    await this.storage.setJson(STORAGE_KEY, photo);
   }
 
   private applyBackground(url: string): void {

@@ -226,7 +226,7 @@ function serveJson(res, file) {
 
 const server = http.createServer(function (req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -235,8 +235,11 @@ const server = http.createServer(function (req, res) {
         return;
     }
 
-    // Bookmark routes
-    if (req.url.startsWith('/api/bookmarks')) {
+    // Bookmark routes (legacy + PocketBase-style)
+    if (
+        req.url.startsWith('/api/bookmarks') ||
+        req.url.startsWith('/api/collections/bookmarks/records')
+    ) {
         handleBookmarks(req, res);
         return;
     }

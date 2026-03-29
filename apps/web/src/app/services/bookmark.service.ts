@@ -2,6 +2,7 @@ import { Injectable, signal, inject } from "@angular/core";
 import { Observable } from "rxjs";
 import { IBookmark } from "../models/IBookmark";
 import { ApiService } from "./api-service";
+import { ExtensionStorageService } from "./extension-storage.service";
 
 interface PendingMutation {
   type: "create" | "update" | "delete" | "reorder";
@@ -17,32 +18,25 @@ const PENDING_KEY = "bookmark_pending_mutations";
 })
 export class BookmarkService {
   private api = inject(ApiService);
+  private storage = inject(ExtensionStorageService);
 
   readonly bookmarks = signal<IBookmark[]>([]);
 
   constructor() {
-    this.loadFromCache();
+    void this.loadFromCache();
     this.loadFromApi();
-    window.addEventListener("online", () => this.drainPendingQueue());
+    window.addEventListener("online", () => void this.drainPendingQueue());
   }
 
-  private loadFromCache(): void {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        this.bookmarks.set(JSON.parse(cached));
-      }
-    } catch {
-      // ignore corrupt cache
+  private async loadFromCache(): Promise<void> {
+    const cached = await this.storage.getJson<IBookmark[]>(CACHE_KEY);
+    if (cached) {
+      this.bookmarks.set(cached);
     }
   }
 
   private writeCache(bookmarks: IBookmark[]): void {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(bookmarks));
-    } catch {
-      // ignore storage errors
-    }
+    void this.storage.setJson(CACHE_KEY, bookmarks);
   }
 
   private loadFromApi(): void {
@@ -58,37 +52,25 @@ export class BookmarkService {
     });
   }
 
-  private enqueueMutation(mutation: PendingMutation): void {
-    try {
-      const existing: PendingMutation[] = JSON.parse(
-        localStorage.getItem(PENDING_KEY) ?? "[]",
-      );
-      existing.push(mutation);
-      localStorage.setItem(PENDING_KEY, JSON.stringify(existing));
-    } catch {
-      // ignore storage errors
-    }
+  private async enqueueMutation(mutation: PendingMutation): Promise<void> {
+    const existing =
+      (await this.storage.getJson<PendingMutation[]>(PENDING_KEY)) ?? [];
+    existing.push(mutation);
+    await this.storage.setJson(PENDING_KEY, existing);
   }
 
-  private drainPendingQueue(): void {
-    let pending: PendingMutation[];
-    try {
-      pending = JSON.parse(localStorage.getItem(PENDING_KEY) ?? "[]");
-    } catch {
-      return;
-    }
+  private async drainPendingQueue(): Promise<void> {
+    const pending =
+      (await this.storage.getJson<PendingMutation[]>(PENDING_KEY)) ?? [];
     if (!pending.length) return;
-    localStorage.removeItem(PENDING_KEY);
 
-    const runNext = (queue: PendingMutation[]): void => {
-      if (!queue.length) {
-        this.loadFromApi();
-        return;
-      }
-      const [head, ...tail] = queue;
-      this.replayMutation(head).then(() => runNext(tail));
-    };
-    runNext(pending);
+    await this.storage.remove(PENDING_KEY);
+
+    for (const mutation of pending) {
+      await this.replayMutation(mutation);
+    }
+
+    this.loadFromApi();
   }
 
   private replayMutation(mutation: PendingMutation): Promise<void> {
@@ -133,7 +115,7 @@ export class BookmarkService {
         this.writeCache(this.bookmarks());
       },
       error: () => {
-        this.enqueueMutation({
+        void this.enqueueMutation({
           type: "create",
           payload: { ...data, order: nextOrder },
           timestamp: Date.now(),
@@ -160,7 +142,7 @@ export class BookmarkService {
         this.writeCache(this.bookmarks());
       },
       error: () => {
-        this.enqueueMutation({
+        void this.enqueueMutation({
           type: "update",
           payload: { id, changes },
           timestamp: Date.now(),
@@ -175,7 +157,7 @@ export class BookmarkService {
 
     this.api.deleteBookmark(id).subscribe({
       error: () => {
-        this.enqueueMutation({
+        void this.enqueueMutation({
           type: "delete",
           payload: id,
           timestamp: Date.now(),
@@ -197,7 +179,7 @@ export class BookmarkService {
 
     this.api.reorderBookmarks(orderedIds).subscribe({
       error: () => {
-        this.enqueueMutation({
+        void this.enqueueMutation({
           type: "reorder",
           payload: orderedIds,
           timestamp: Date.now(),
