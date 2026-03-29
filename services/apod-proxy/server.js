@@ -1,7 +1,11 @@
 const http = require('http');
 const https = require('https');
+const fs = require('fs');
 
 const port = process.env.PORT || 3001;
+const useTls = String(process.env.APOD_ENABLE_TLS || 'false').toLowerCase() === 'true';
+const tlsCertPath = process.env.APOD_TLS_CERT_PATH || '/etc/nginx/certs/cert.pem';
+const tlsKeyPath = process.env.APOD_TLS_KEY_PATH || '/etc/nginx/certs/key.pem';
 const MAX_DAYS_BACK = 5;
 
 function httpsGet(url) {
@@ -79,7 +83,7 @@ function applyCors(req, res) {
   }
 }
 
-const server = http.createServer((req, res) => {
+const requestHandler = (req, res) => {
   applyCors(req, res);
 
   if (req.method === 'OPTIONS') {
@@ -101,8 +105,26 @@ const server = http.createServer((req, res) => {
 
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: 'Not found' }));
-});
+};
+
+let server;
+if (useTls) {
+  let cert;
+  let key;
+  try {
+    cert = fs.readFileSync(tlsCertPath);
+    key = fs.readFileSync(tlsKeyPath);
+  } catch (err) {
+    console.error(`Failed to read APOD TLS files at ${tlsCertPath} and ${tlsKeyPath}:`, err.message);
+    process.exit(1);
+  }
+
+  server = https.createServer({ cert, key }, requestHandler);
+} else {
+  server = http.createServer(requestHandler);
+}
 
 server.listen(port, () => {
-  console.log(`APOD proxy running on http://localhost:${port}`);
+  const protocol = useTls ? 'https' : 'http';
+  console.log(`APOD proxy running on ${protocol}://localhost:${port}`);
 });

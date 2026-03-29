@@ -22,8 +22,7 @@ services:
       - "${WEB_PORT:-80}:80"
       - "${WEB_TLS_PORT:-443}:443"
     volumes:
-      - "${TLS_CERT_PATH:-./certs/cert.pem}:/etc/nginx/certs/cert.pem:ro"
-      - "${TLS_KEY_PATH:-./certs/key.pem}:/etc/nginx/certs/key.pem:ro"
+      - "${TLS_CERTS_DIR:-./certs}:/etc/nginx/certs:ro"
     restart: unless-stopped
 
   pocketbase:
@@ -48,9 +47,14 @@ services:
       dockerfile: services/apod-proxy/Dockerfile
     environment:
       PORT: "3001"
+      APOD_ENABLE_TLS: "${APOD_ENABLE_TLS:-false}"
+      APOD_TLS_CERT_PATH: "/etc/nginx/certs/cert.pem"
+      APOD_TLS_KEY_PATH: "/etc/nginx/certs/key.pem"
       TZ: "${TZ:-UTC}"
     ports:
       - "${APOD_PROXY_PORT:-3001}:3001"
+    volumes:
+      - "${TLS_CERTS_DIR:-./certs}:/etc/nginx/certs:ro"
     restart: unless-stopped
 
 volumes:
