@@ -16,6 +16,7 @@
   "lint-staged": {
     "*.{ts,html,scss,json,md}": "prettier --write"
   },
+  "license": "MIT",
   "private": true,
   "packageManager": "npm@11.11.0",
   "dependencies": {
