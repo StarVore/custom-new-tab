@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "NASA APOD Custom New Tab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A customisable new tab page with bookmarks and NASA APOD background.",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
   "permissions": ["storage"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",

@@ -72,6 +72,10 @@
         }
       </div>
 
+      @if (permissionError()) {
+      <p class="status fail">✗ {{ permissionError() }}</p>
+      }
+
       <div class="settings-actions">
         <button type="submit" class="save-btn" [disabled]="form.invalid">
           Save Changes

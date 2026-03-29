@@ -224,10 +224,28 @@ function serveJson(res, file) {
     });
 }
 
+function applyCors(req, res) {
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Vary', 'Origin');
+    } else {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+
+    const requestedHeaders = req.headers['access-control-request-headers'];
+    res.setHeader('Access-Control-Allow-Headers', requestedHeaders || 'Content-Type');
+
+    // Chrome may require this for secure-context -> private-network preflights.
+    if (req.headers['access-control-request-private-network'] === 'true') {
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+}
+
 const server = http.createServer(function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    applyCors(req, res);
 
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
