@@ -92,7 +92,14 @@ The `web`, `pocketbase`, and `apod-proxy` images are built by Docker directly fr
 - `GIT_REF` — branch, tag, or commit ref to build
 - `POCKETBASE_VERSION` — official PocketBase release version downloaded during the image build
 
-Open `http://<your-server-ip>` in a browser. The setup screen asks for the two service URLs:
+Open `http://<your-server-ip>` in a browser. The setup screen asks for the two service URLs.
+
+Recommended (single-origin via nginx reverse proxy):
+
+- **Bookmark service:** `http://<your-server-ip>/pb`
+- **APOD service:** `http://<your-server-ip>/apod`
+
+Direct service URLs are also supported if needed:
 
 - **Bookmark service:** `http://<your-server-ip>:8090`
 - **APOD service:** `http://<your-server-ip>:3001`
@@ -105,11 +112,17 @@ Add to your `.env` and restart:
 
 ```env
 ENABLE_TLS=true
-TLS_CERT_PATH=/path/to/cert.pem
-TLS_KEY_PATH=/path/to/key.pem
+TLS_CERTS_DIR=/path/to/certs
 ```
 
-The nginx container mounts the certificate and key read-only, redirects HTTP → HTTPS, and terminates TLS at port `$WEB_TLS_PORT` (default `443`). If the cert/key files are missing or empty, the container automatically falls back to HTTP.
+The cert directory must contain `cert.pem` and `key.pem`.
+
+The nginx container mounts the cert directory read-only, redirects HTTP → HTTPS, and terminates TLS at port `$WEB_TLS_PORT` (default `443`). If the cert/key files are missing or empty, the container automatically falls back to HTTP.
+
+When HTTPS is enabled, prefer single-origin setup values:
+
+- **Bookmark service:** `https://<your-server-ip>/pb`
+- **APOD service:** `https://<your-server-ip>/apod`
 
 ---
 
@@ -175,9 +188,9 @@ Set the collection API rules to allow read/write without authentication (or conf
 | `PUID`               | `1000`                    | UID for PocketBase volume writes                         |
 | `PGID`               | `1000`                    | GID for PocketBase volume writes                         |
 | `TZ`                 | `UTC`                     | Timezone                                                 |
-| `ENABLE_TLS`         | `false`                   | Set `true` to enable HTTPS                               |
-| `TLS_CERT_PATH`      | `./certs/cert.pem`        | Host path to TLS certificate                             |
-| `TLS_KEY_PATH`       | `./certs/key.pem`         | Host path to TLS private key                             |
+| `ENABLE_TLS`         | `false`                   | Set `true` to enable HTTPS for the web/nginx service     |
+| `TLS_CERTS_DIR`      | `./certs`                 | Host directory containing `cert.pem` and `key.pem`       |
+| `APOD_ENABLE_TLS`    | `false`                   | Set `true` to enable HTTPS directly on the APOD service  |
 
 ---
 

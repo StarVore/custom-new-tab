@@ -9,8 +9,9 @@
 services:
 
   # Single production-oriented stack.
-  # Point the app setup to http://<host>:${POCKETBASE_PORT} for bookmarks
-  # and http://<host>:${APOD_PROXY_PORT} for APOD.
+  # Prefer single-origin setup URLs through nginx reverse proxy:
+  # - Bookmark service: http(s)://<host>/pb
+  # - APOD service: http(s)://<host>/apod
 
   web:
     build:

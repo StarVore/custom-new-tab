@@ -59,7 +59,7 @@ function readBody(req) {
 }
 
 async function handleBookmarks(req, res) {
-    const url = req.url;
+    const url = req.normalizedUrl || req.url;
     const method = req.method;
 
     // GET /api/collections/bookmarks/records
@@ -211,6 +211,19 @@ const routes = [
     { method: 'GET', path: '/api/apod', handler: fetchApod },
 ];
 
+function normalizeServicePath(url) {
+    const [pathname, queryString] = url.split('?');
+
+    let normalizedPath = pathname;
+    if (pathname === '/pb' || pathname.startsWith('/pb/')) {
+        normalizedPath = pathname.slice('/pb'.length) || '/';
+    } else if (pathname === '/apod' || pathname.startsWith('/apod/')) {
+        normalizedPath = pathname.slice('/apod'.length) || '/';
+    }
+
+    return queryString ? `${normalizedPath}?${queryString}` : normalizedPath;
+}
+
 function serveJson(res, file) {
     const filePath = path.join(__dirname, 'JSONs', file);
     fs.readFile(filePath, 'utf8', function (err, data) {
@@ -246,6 +259,8 @@ function applyCors(req, res) {
 
 const server = http.createServer(function (req, res) {
     applyCors(req, res);
+    req.normalizedUrl = normalizeServicePath(req.url);
+    const normalizedPath = req.normalizedUrl.split('?')[0];
 
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
@@ -255,14 +270,14 @@ const server = http.createServer(function (req, res) {
 
     // Bookmark routes (legacy + PocketBase-style)
     if (
-        req.url.startsWith('/api/bookmarks') ||
-        req.url.startsWith('/api/collections/bookmarks/records')
+        normalizedPath.startsWith('/api/bookmarks') ||
+        normalizedPath.startsWith('/api/collections/bookmarks/records')
     ) {
         handleBookmarks(req, res);
         return;
     }
 
-    const route = routes.find(r => r.method === req.method && r.path === req.url);
+    const route = routes.find(r => r.method === req.method && r.path === normalizedPath);
     if (route) {
         if (route.handler) {
             route.handler(req, res);
