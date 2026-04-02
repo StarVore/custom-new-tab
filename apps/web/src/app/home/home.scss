@@ -13,13 +13,63 @@ main {
   top: 12px;
   right: 14px;
   z-index: 100;
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.18);
   text-decoration: none;
   line-height: 1;
   transition: color 0.15s;
 
   &:hover {
-    color: rgba(255, 255, 255, 0.85);
+    color: #fff;
   }
+}
+
+.toggle-hide-btn-container {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 10;
+}
+
+.toggle-hide-btn {
+  z-index: 10;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  transition:
+    background 0.15s,
+    transform 0.12s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+}
+
+.enter-animation {
+  animation: slide-fade 1s;
+}
+
+@keyframes slide-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.leaving {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 500ms ease-out,
+    transform 500ms ease-out;
 }

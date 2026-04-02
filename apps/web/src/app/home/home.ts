@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { ChangeDetectorRef, Component } from "@angular/core";
 import { Footer } from "../core-parts/footer/footer.component";
 import { BookmarksGridComponent } from "../core-parts/bookmarks-grid/bookmarks-grid";
 import { RouterLink } from "@angular/router";
@@ -10,4 +10,15 @@ import { RouterLink } from "@angular/router";
   templateUrl: "./home.html",
   styleUrl: "./home.scss",
 })
-export class HomeComponent {}
+export class HomeComponent {
+  hideShowLbl: string = "Hide";
+  showBookmarks: boolean = true;
+
+  constructor(private cdf: ChangeDetectorRef) {}
+
+  toggleHide(): void {
+    this.showBookmarks = !this.showBookmarks;
+    this.hideShowLbl = this.showBookmarks ? "Hide" : "Show";
+    this.cdf.detectChanges();
+  }
+}

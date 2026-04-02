@@ -1,5 +1,17 @@
+<div class="toggle-hide-btn-container">
+  <button (click)="toggleHide()" class="toggle-hide-btn">
+    {{hideShowLbl}}
+  </button>
+</div>
 <main>
   <a routerLink="/settings" class="settings-link" title="Backend settings">⚙</a>
-  <app-bookmarks-grid></app-bookmarks-grid>
+  <div style="margin-top: 50px">
+    @if (showBookmarks) {
+    <app-bookmarks-grid
+      animate.enter="enter-animation"
+      animate.leave="leaving"
+    ></app-bookmarks-grid>
+    }
+  </div>
   <app-footer></app-footer>
 </main>
