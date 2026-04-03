@@ -7,6 +7,14 @@ const useTls = String(process.env.APOD_ENABLE_TLS || 'false').toLowerCase() === 
 const tlsCertPath = process.env.APOD_TLS_CERT_PATH || '/etc/nginx/certs/cert.pem';
 const tlsKeyPath = process.env.APOD_TLS_KEY_PATH || '/etc/nginx/certs/key.pem';
 const MAX_DAYS_BACK = 5;
+const HTML_ENTITY_MAP = {
+  amp: '&',
+  apos: "'",
+  gt: '>',
+  lt: '<',
+  nbsp: ' ',
+  quot: '"',
+};
 
 function httpsGet(url) {
   return new Promise((resolve, reject) => {
@@ -18,6 +26,35 @@ function httpsGet(url) {
       })
       .on('error', reject);
   });
+}
+
+function decodeHtmlEntities(text) {
+  return text.replace(/&(#x?[\da-f]+|[a-z]+);/gi, (match, entity) => {
+    if (entity[0] === '#') {
+      const isHex = entity[1]?.toLowerCase() === 'x';
+      const value = Number.parseInt(entity.slice(isHex ? 2 : 1), isHex ? 16 : 10);
+
+      return Number.isNaN(value) ? match : String.fromCodePoint(value);
+    }
+
+    return HTML_ENTITY_MAP[entity.toLowerCase()] ?? match;
+  });
+}
+
+function normalizeExplanationText(html) {
+  return decodeHtmlEntities(
+    html
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<(br|\/p|p)\b[^>]*>/gi, ' ')
+      .replace(/<[^>]+>/g, '')
+  )
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/([([{])\s+/g, '$1')
+    .replace(/(^|[\s([{])(["'])\s+/g, '$1$2')
+    .replace(/\s+([)\]}])/g, '$1')
+    .replace(/\s+(["'])(?=$|[\s,.;:!?)}\]])/g, '$1')
+    .trim();
 }
 
 async function fetchLatestApodImage() {
@@ -40,9 +77,7 @@ async function fetchLatestApodImage() {
 
     const imageUrl = `https://apod.nasa.gov/apod/${imgMatch[1]}`;
     const explanationMatch = apodHtml.match(/<b>\s*Explanation:\s*<\/b>\s*(.*?)<p>/is);
-    const explanation = explanationMatch
-      ? explanationMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-      : '';
+    const explanation = explanationMatch ? normalizeExplanationText(explanationMatch[1]) : '';
 
     console.log(`Found APOD image on entry ${i + 1}: ${imageUrl}`);
     return { url: imageUrl, pageUrl, explanation, fetchedAt: new Date().toISOString() };
@@ -107,24 +142,38 @@ const requestHandler = (req, res) => {
   res.end(JSON.stringify({ error: 'Not found' }));
 };
 
-let server;
-if (useTls) {
-  let cert;
-  let key;
-  try {
-    cert = fs.readFileSync(tlsCertPath);
-    key = fs.readFileSync(tlsKeyPath);
-  } catch (err) {
-    console.error(`Failed to read APOD TLS files at ${tlsCertPath} and ${tlsKeyPath}:`, err.message);
-    process.exit(1);
+function startServer() {
+  let server;
+  if (useTls) {
+    let cert;
+    let key;
+    try {
+      cert = fs.readFileSync(tlsCertPath);
+      key = fs.readFileSync(tlsKeyPath);
+    } catch (err) {
+      console.error(`Failed to read APOD TLS files at ${tlsCertPath} and ${tlsKeyPath}:`, err.message);
+      process.exit(1);
+    }
+
+    server = https.createServer({ cert, key }, requestHandler);
+  } else {
+    server = http.createServer(requestHandler);
   }
 
-  server = https.createServer({ cert, key }, requestHandler);
-} else {
-  server = http.createServer(requestHandler);
+  server.listen(port, () => {
+    const protocol = useTls ? 'https' : 'http';
+    console.log(`APOD proxy running on ${protocol}://localhost:${port}`);
+  });
+
+  return server;
 }
 
-server.listen(port, () => {
-  const protocol = useTls ? 'https' : 'http';
-  console.log(`APOD proxy running on ${protocol}://localhost:${port}`);
-});
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = {
+  decodeHtmlEntities,
+  normalizeExplanationText,
+  startServer,
+};
