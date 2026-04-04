@@ -35,7 +35,7 @@ export class BgService {
 
   async loadBackground(): Promise<void> {
     const cached = await this.getCachedPhoto();
-    if (cached) {
+    if (cached && this.isPhotoFromToday(cached)) {
       this.photoDetails.set(cached);
       this.applyBackground(cached.url);
       return;
@@ -51,23 +51,45 @@ export class BgService {
         this.photoDetails.set(photo);
         this.applyBackground(photo.url);
       },
-      error: (err) => console.error("Failed to load APOD background:", err),
+      error: (err) => {
+        if (cached) {
+          this.photoDetails.set(cached);
+          this.applyBackground(cached.url);
+          return;
+        }
+
+        console.error("Failed to load APOD background:", err);
+      },
     });
   }
 
   async getCachedPhoto(): Promise<IApodPhoto | null> {
     const cached = await this.storage.getJson<IApodPhoto>(STORAGE_KEY);
     if (!cached) return null;
+
+    if (
+      !cached.url ||
+      !cached.pageUrl ||
+      !cached.explanation ||
+      !cached.fetchedAt
+    ) {
+      return null;
+    }
+
+    return cached;
+  }
+
+  private isPhotoFromToday(photo: IApodPhoto): boolean {
     try {
-      const fetchedAt = new Date(cached.fetchedAt);
+      const fetchedAt = new Date(photo.fetchedAt);
       const today = new Date();
-      const isSameDay =
+      return (
         fetchedAt.getFullYear() === today.getFullYear() &&
         fetchedAt.getMonth() === today.getMonth() &&
-        fetchedAt.getDate() === today.getDate();
-      return isSameDay ? cached : null;
+        fetchedAt.getDate() === today.getDate()
+      );
     } catch {
-      return null;
+      return false;
     }
   }
 
