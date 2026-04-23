@@ -115,7 +115,45 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "runner": "vitest",
+            "tsConfig": "tsconfig.spec.json"
+          },
+          "configurations": {
+            "coverage": {
+              "watch": false,
+              "coverage": true,
+              "coverageReporters": ["text-summary", "lcov", "html"],
+              "coverageExclude": [
+                "**/*.html",
+                "**/main.ts",
+                "**/app.config.ts",
+                "**/app.config.extension.ts",
+                "**/models/**",
+                "**/environments/**"
+              ]
+            },
+            "ci": {
+              "watch": false,
+              "coverage": true,
+              "coverageReporters": ["text-summary", "lcov"],
+              "coverageThresholds": {
+                "statements": 90,
+                "branches": 90,
+                "functions": 90,
+                "lines": 90
+              },
+              "coverageExclude": [
+                "**/*.html",
+                "**/main.ts",
+                "**/app.config.ts",
+                "**/app.config.extension.ts",
+                "**/models/**",
+                "**/environments/**"
+              ]
+            }
+          }
         }
       }
     }

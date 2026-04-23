@@ -90,4 +90,114 @@ describe("BgService", () => {
     expect(service.photoDetails()).toEqual(freshPhoto);
     expect(document.body.style.backgroundImage).toContain(freshPhoto.url);
   });
+
+  it("serves today's cached photo without calling the API", async () => {
+    const todayPhoto: IApodPhoto = {
+      url: "https://images.example.com/today.jpg",
+      pageUrl: "https://apod.nasa.gov/apod/today.html",
+      explanation: "Today's photo",
+      fetchedAt: new Date().toISOString(),
+    };
+    configured.set(true);
+    storageMock.getJson.mockResolvedValue(todayPhoto);
+
+    const service = TestBed.inject(BgService);
+    await service.loadBackground();
+
+    expect(apiMock.getApodImage).not.toHaveBeenCalled();
+    expect(service.photoDetails()).toEqual(todayPhoto);
+  });
+
+  it("skips API call when not configured after loading a stale cached photo", async () => {
+    configured.set(false);
+    storageMock.getJson.mockResolvedValue(stalePhoto); // stale, not from today
+
+    const service = TestBed.inject(BgService);
+    await service.loadBackground();
+
+    expect(apiMock.getApodImage).not.toHaveBeenCalled();
+  });
+
+  it("logs error when API fails with no cached photo to fall back on", async () => {
+    configured.set(true);
+    storageMock.getJson.mockResolvedValue(null);
+    apiMock.getApodImage.mockReturnValue(
+      throwError(() => new Error("no network")),
+    );
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const service = TestBed.inject(BgService);
+    await service.loadBackground();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Failed to load APOD background:",
+      expect.any(Error),
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it("getCachedPhoto returns null when cached data is missing required fields", async () => {
+    storageMock.getJson.mockResolvedValue({
+      url: "https://images.example.com/photo.jpg",
+      // missing pageUrl, explanation, fetchedAt
+    });
+
+    const service = TestBed.inject(BgService);
+    const result = await service.getCachedPhoto();
+    expect(result).toBeNull();
+  });
+
+  it("does not apply background when today's cached URL is not https", async () => {
+    const httpPhoto: IApodPhoto = {
+      url: "http://images.example.com/photo.jpg",
+      pageUrl: "https://apod.nasa.gov/apod/today.html",
+      explanation: "Photo with http URL",
+      fetchedAt: new Date().toISOString(),
+    };
+    configured.set(true);
+    storageMock.getJson.mockResolvedValue(httpPhoto);
+
+    const service = TestBed.inject(BgService);
+    await service.loadBackground();
+
+    const document = TestBed.inject(DOCUMENT);
+    expect(document.body.style.backgroundImage).toBe("");
+  });
+
+  it("effect clears photo and background when service becomes unconfigured", async () => {
+    configured.set(true);
+    storageMock.getJson.mockResolvedValue(null);
+    storageMock.setJson.mockResolvedValue(undefined);
+    apiMock.getApodImage.mockReturnValue(of(freshPhoto));
+
+    const service = TestBed.inject(BgService);
+    TestBed.flushEffects();
+    await new Promise((r) => setTimeout(r, 0));
+
+    configured.set(false);
+    TestBed.flushEffects();
+
+    expect(service.photoDetails()).toBeNull();
+    const document = TestBed.inject(DOCUMENT);
+    expect(document.body.style.backgroundImage).toBe("");
+  });
+
+  it("effect triggers loadBackground when service becomes configured", async () => {
+    storageMock.getJson.mockResolvedValue(null);
+    storageMock.setJson.mockResolvedValue(undefined);
+    apiMock.getApodImage.mockReturnValue(of(freshPhoto));
+
+    const service = TestBed.inject(BgService);
+    TestBed.flushEffects();
+    expect(apiMock.getApodImage).not.toHaveBeenCalled();
+
+    configured.set(true);
+    TestBed.flushEffects();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(apiMock.getApodImage).toHaveBeenCalled();
+    expect(service.photoDetails()).toEqual(freshPhoto);
+  });
 });
