@@ -14,11 +14,17 @@ const CONFIG_KEY = "app_config";
 export class ConfigService {
   private readonly storage = inject(ExtensionStorageService);
   private readonly _config = signal<AppConfig | null>(null);
+  private readonly _loaded: Promise<void>;
 
   readonly isConfigured = computed(() => this._config() !== null);
 
   constructor() {
-    void this.loadFromStorage();
+    this._loaded = this.loadFromStorage();
+  }
+
+  /** Resolves once the initial storage read has completed. */
+  waitForLoad(): Promise<void> {
+    return this._loaded;
   }
 
   get(): AppConfig | null {

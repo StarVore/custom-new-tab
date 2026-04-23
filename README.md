@@ -3,8 +3,6 @@
 A self-hosted new tab page with bookmarks and a NASA Astronomy Picture Of the Day background. Runs as a Chrome extension, Firefox extension, or a LAN-hosted web app for devices that do not support extensions.
 
 
----
-
 ## How it works
 
 The frontend is a single Angular app shared across all three deployment targets. On first launch, a setup screen collects the URLs of your two backend services:
@@ -16,8 +14,6 @@ The frontend is a single Angular app shared across all three deployment targets.
 
 Bookmarks are cached locally in `localStorage` and synced to PocketBase. Failed writes are queued and replayed when the connection is restored. The APOD background is cached for the current day so it only fetches once per day.
 
-
----
 
 ## Features
 
@@ -33,8 +29,6 @@ Bookmarks are cached locally in `localStorage` and synced to PocketBase. Failed 
 * PWA / service worker for app-shell caching (LAN-hosted target)
 * Chrome extension, Firefox extension, and LAN-hosted web app build targets
 
-
----
 
 ## Development
 
@@ -69,8 +63,6 @@ The mock server provides:
 * `GET  /api/apod` — static dev APOD response (no network requests)
 * `GET  /health` — liveness check
 
-
----
 
 ## Production / LAN deployment
 
@@ -129,8 +121,6 @@ When HTTPS is enabled, prefer single-origin setup values:
 * **APOD service:** `https://<your-server-ip>/apod`
 
 
----
-
 ## Chrome extension
 
 ```bash
@@ -140,18 +130,17 @@ npm run build:chrome
 Output: `dist/CustomNewTab/browser/`
 
 
+
 1. Open `chrome://extensions`
 2. Enable **Developer mode**
 3. Click **Load unpacked** → select `dist/CustomNewTab/browser/`
 
 
----
-
 ## Firefox extension
 
 ```bash
 npm run build:firefox
-cd dist/CustomNewTab/browser && zip -r ../firefox-extension.xpi .
+cd dist/CustomNewTab/browser && zip -r ../firefox-extension.xpi . && cd ../../../
 ```
 
 Output:
@@ -165,13 +154,12 @@ and
 **Temporary load (testing):**
 
 
+
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on…** → select `dist/CustomNewTab/browser/manifest.json`
 
 **Permanent install:** Zip the output folder and submit to [addons.mozilla.org](https://addons.mozilla.org). Update the `gecko.id` in `apps/web/extension/firefox/manifest.json` to a unique identifier before submitting.
 
-
----
 
 ## PocketBase collection schema
 
@@ -188,8 +176,6 @@ Set the collection API rules to allow read/write without authentication (or conf
 
 > PocketBase admin UI: `http://<your-server>:8090/_/`
 
-
----
 
 ## Environment variables
 
@@ -209,8 +195,6 @@ Set the collection API rules to allow read/write without authentication (or conf
 | `TLS_CERTS_DIR` | `./certs` | Host directory containing `cert.pem` and `key.pem` |
 | `APOD_ENABLE_TLS` | `false` | Set `true` to enable HTTPS directly on the APOD service |
 
-
----
 
 ## Troubleshooting
 
