@@ -3,6 +3,7 @@ import { Observable } from "rxjs";
 import { IBookmark } from "../models/IBookmark";
 import { IBookmarkVisit, IBookmarkVisitPayload } from "../models/IBookmarkVisit";
 import { ApiService } from "./api-service";
+import { ConfigService } from "./config.service";
 import { ExtensionStorageService } from "./extension-storage.service";
 
 const PENDING_VISITS_KEY = "bookmark_pending_visits";
@@ -12,9 +13,11 @@ const PENDING_VISITS_KEY = "bookmark_pending_visits";
 })
 export class BookmarkVisitService {
   private api = inject(ApiService);
+  private config = inject(ConfigService);
   private storage = inject(ExtensionStorageService);
 
   constructor() {
+    void this.drainPendingQueue();
     window.addEventListener("online", () => void this.drainPendingQueue());
   }
 
@@ -24,12 +27,26 @@ export class BookmarkVisitService {
 
   recordVisit(bookmark: IBookmark, context = "bookmark-card"): void {
     const payload = this.buildPayload(bookmark, context);
+    const url = this.visitRecordsUrl;
 
-    this.api.createBookmarkVisit(payload).subscribe({
-      error: () => {
-        void this.enqueueVisit(payload);
-      },
+    if (!url) {
+      void this.enqueueVisit(payload);
+      return;
+    }
+
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {
+      void this.enqueueVisit(payload);
     });
+  }
+
+  private get visitRecordsUrl(): string {
+    const base = (this.config.get()?.bookmarkBaseUrl ?? "").replace(/\/+$/, "");
+    return base ? `${base}/api/collections/bookmark_visits/records` : "";
   }
 
   private buildPayload(
