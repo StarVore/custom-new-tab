@@ -31,6 +31,29 @@ Bookmarks are cached locally in `localStorage` and synced to PocketBase. Failed 
 * Chrome extension, Firefox extension, and LAN-hosted web app build targets
 
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><b>Desktop View</b></td>
+    <td align="center"><b>Stats View</b></td>
+    
+  </tr>
+  <tr>
+    <td><img src="docs/images/desktop.png" alt="Desktop view" /></td>
+    <td><img src="docs/images/stats.png" alt="Stats view" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Add Bookmark</b></td>
+    <td align="center"><b>Mobile View</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/add_bookmark.png" alt="Add bookmark" /></td>
+    <td><img src="docs/images/mobile.png" alt="Mobile view" /></td>
+  </tr>
+</table>
+
+
 ## Development
 
 **Requirements:** Node.js 20+, npm 11+
