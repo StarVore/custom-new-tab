@@ -58,6 +58,25 @@ describe("BgService", () => {
     document.body.style.backgroundAttachment = "";
   });
 
+  it("shows stale cached photo immediately then replaces with fresh from API", async () => {
+    configured.set(true);
+    storageMock.getJson.mockResolvedValue(stalePhoto);
+    storageMock.setJson.mockResolvedValue(undefined);
+    apiMock.getApodImage.mockReturnValue(of(freshPhoto));
+
+    const service = TestBed.inject(BgService);
+    await service.loadBackground();
+
+    const document = TestBed.inject(DOCUMENT);
+    // The final state should be the fresh photo, which replaced the stale one.
+    expect(service.photoDetails()).toEqual(freshPhoto);
+    expect(document.body.style.backgroundImage).toContain(freshPhoto.url);
+    // The API was still called because the cache was stale.
+    expect(apiMock.getApodImage).toHaveBeenCalledTimes(1);
+    // The fresh photo was persisted to cache.
+    expect(storageMock.setJson).toHaveBeenCalledWith("apod_background", freshPhoto);
+  });
+
   it("falls back to cached APOD when API request fails", async () => {
     configured.set(true);
     storageMock.getJson.mockResolvedValue(stalePhoto);

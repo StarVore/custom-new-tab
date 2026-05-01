@@ -35,9 +35,16 @@ export class BgService {
 
   async loadBackground(): Promise<void> {
     const cached = await this.getCachedPhoto();
-    if (cached && this.isPhotoFromToday(cached)) {
+
+    // Always show the cached photo immediately so the background is never black
+    // while waiting for the network, even if the cache is from a previous day.
+    if (cached) {
       this.photoDetails.set(cached);
       this.applyBackground(cached.url);
+    }
+
+    // Today's photo is already cached — no network call needed.
+    if (cached && this.isPhotoFromToday(cached)) {
       return;
     }
 
@@ -52,13 +59,10 @@ export class BgService {
         this.applyBackground(photo.url);
       },
       error: (err) => {
-        if (cached) {
-          this.photoDetails.set(cached);
-          this.applyBackground(cached.url);
-          return;
+        if (!cached) {
+          console.error("Failed to load APOD background:", err);
         }
-
-        console.error("Failed to load APOD background:", err);
+        // If cached was already applied above, silently ignore the API error.
       },
     });
   }
