@@ -19,6 +19,7 @@ Bookmarks are cached locally in `localStorage` and synced to PocketBase. Failed 
 
 * Reorderable bookmark grid with drag-and-drop
 * Add, edit, and delete bookmarks
+* Bookmark visit tracking with a dedicated Stats view
 * Responsive layout (2–6 columns depending on screen width)
 * Daily NASA APOD full-screen background
 * Expandable "About Background" footer sheet with explanation text
@@ -49,19 +50,31 @@ Open `http://localhost:4200`. On first run the setup screen appears — enter `h
 
 The mock server is a standalone local development tool only. It is not part of Docker Compose.
 
-The mock server provides:
+The mock server provides two groups of routes. The PocketBase-compatible routes are the ones the Angular app actually uses; the legacy routes are kept for backwards compatibility.
 
-* `GET  /api/bookmarks` — in-memory bookmark list
-* `POST /api/bookmarks` — create bookmark
-* `PUT  /api/bookmarks/:id` — update bookmark
-* `DELETE /api/bookmarks/:id` — delete bookmark
-* `PUT  /api/bookmarks/reorder` — reorder bookmarks
-* `GET  /api/collections/bookmarks/records` — PocketBase-compatible bookmark list response
-* `POST /api/collections/bookmarks/records` — PocketBase-compatible bookmark create
-* `PATCH /api/collections/bookmarks/records/:id` — PocketBase-compatible bookmark update
-* `DELETE /api/collections/bookmarks/records/:id` — PocketBase-compatible bookmark delete
-* `GET  /api/apod` — static dev APOD response (no network requests)
-* `GET  /health` — liveness check
+**Bookmarks (PocketBase-compatible)**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/collections/bookmarks/records` | List bookmarks (sorted by `order`, PocketBase list envelope) |
+| `POST` | `/api/collections/bookmarks/records` | Create bookmark |
+| `PATCH` | `/api/collections/bookmarks/records/:id` | Update bookmark fields |
+| `DELETE` | `/api/collections/bookmarks/records/:id` | Delete bookmark |
+
+**Bookmark visits (PocketBase-compatible)**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/collections/bookmark_visits/records` | List all recorded visits (sorted newest first) |
+| `POST` | `/api/collections/bookmark_visits/records` | Record a bookmark visit — accepts `bookmarkId`, `bookmarkTitle`, `bookmarkUrl`, `source`, `context`, `platform`, `userAgent`; returns the created record with auto-generated `id`, `created`, and `updated` fields |
+
+**Utility**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Liveness check — returns `{ status: "ok" }` |
+| `GET` | `/api/apod` | Static APOD response (no outbound network requests) |
+| `POST` | `/api/test` | Returns the static JSON at `services/mock-server/JSONs/test.json` |
 
 
 ## Production / LAN deployment
@@ -163,7 +176,13 @@ and
 
 ## PocketBase collection schema
 
-After starting PocketBase for the first time, create a collection named `bookmarks` with these fields:
+Both collections are created automatically via committed JS migrations in `services/pocketbase/pb_migrations/`. When the PocketBase container starts for the first time it applies all pending migrations, so no manual steps are required. The migrations are also idempotent — restarting an existing container will not recreate collections that already exist.
+
+> PocketBase admin UI: `http://<your-server>:8090/_/`
+
+### `bookmarks`
+
+Stores the bookmarks displayed on the new tab page.
 
 | Field | Type | Required |
 |----|----|----|
@@ -172,9 +191,22 @@ After starting PocketBase for the first time, create a collection named `bookmar
 | `order` | Number | ✓ |
 | `customImageUrl` | URL | — |
 
-Set the collection API rules to allow read/write without authentication (or configure token-based access if you want access control).
+### `bookmark_visits`
 
-> PocketBase admin UI: `http://<your-server>:8090/_/`
+Records each bookmark click for use in the Stats view. Created automatically by the migration in `services/pocketbase/pb_migrations/`.
+
+| Field | Type | Required | Notes |
+|----|----|----|----|
+| `bookmarkId` | Text | ✓ | ID of the bookmark that was clicked |
+| `bookmarkTitle` | Text | ✓ | Title at the time of the click |
+| `bookmarkUrl` | URL | ✓ | URL at the time of the click |
+| `source` | Text | ✓ | `web`, `chrome-extension`, or `firefox-extension` |
+| `context` | Text | — | Where in the UI the click originated |
+| `platform` | Text | — | `navigator.platform` value from the browser |
+| `userAgent` | Text | — | `navigator.userAgent` value from the browser |
+| `created` | DateTime | auto | Set by PocketBase on record creation; used for date-range filtering |
+
+The Stats view aggregates visit counts from this collection client-side. API rules for both collections should allow read/write without authentication unless you have configured token-based access control.
 
 
 ## Environment variables

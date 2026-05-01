@@ -8,6 +8,7 @@ import { ApiService } from "./api-service";
 import { ConfigService } from "./config.service";
 import { IApodPhoto } from "../models/IApodPhoto";
 import { IBookmark } from "../models/IBookmark";
+import { IBookmarkVisit, IBookmarkVisitPayload } from "../models/IBookmarkVisit";
 
 describe("ApiService", () => {
   let service: ApiService;
@@ -145,6 +146,32 @@ describe("ApiService", () => {
     order: 0,
   };
 
+  const rawVisitRecord = {
+    id: "visit1",
+    bookmarkId: "rec1",
+    bookmarkTitle: "GitHub",
+    bookmarkUrl: "https://github.com",
+    source: "web",
+    context: "new-tab",
+    platform: "macOS",
+    userAgent: "test-agent",
+    created: "2026-04-30T12:00:00.000Z",
+    updated: "2026-04-30T12:00:00.000Z",
+  };
+
+  const bookmarkVisit: IBookmarkVisit = {
+    id: "visit1",
+    bookmarkId: "rec1",
+    bookmarkTitle: "GitHub",
+    bookmarkUrl: "https://github.com",
+    source: "web",
+    context: "new-tab",
+    platform: "macOS",
+    userAgent: "test-agent",
+    created: "2026-04-30T12:00:00.000Z",
+    updated: "2026-04-30T12:00:00.000Z",
+  };
+
   it("getBookmarks maps PocketBase records to IBookmark[]", () => {
     let result: IBookmark[] | undefined;
     service.getBookmarks().subscribe((v) => (result = v));
@@ -216,6 +243,42 @@ describe("ApiService", () => {
         "https://pb.example.com/api/collections/bookmarks/records?sort=order&perPage=200",
       )
       .flush({ items: [rawRecord] });
+  });
+
+  it("getBookmarkVisits maps PocketBase visit records", () => {
+    let result: IBookmarkVisit[] | undefined;
+    service.getBookmarkVisits().subscribe((v) => (result = v));
+
+    http
+      .expectOne(
+        "https://pb.example.com/api/collections/bookmark_visits/records?sort=-created&perPage=500",
+      )
+      .flush({ items: [rawVisitRecord] });
+
+    expect(result).toEqual([bookmarkVisit]);
+  });
+
+  it("createBookmarkVisit posts and maps result", () => {
+    let result: IBookmarkVisit | undefined;
+    const payload: IBookmarkVisitPayload = {
+      bookmarkId: "rec1",
+      bookmarkTitle: "GitHub",
+      bookmarkUrl: "https://github.com",
+      source: "web",
+      context: "new-tab",
+      platform: "macOS",
+      userAgent: "test-agent",
+    };
+
+    service.createBookmarkVisit(payload).subscribe((v) => (result = v));
+
+    const req = http.expectOne(
+      "https://pb.example.com/api/collections/bookmark_visits/records",
+    );
+    expect(req.request.method).toBe("POST");
+    expect(req.request.body).toEqual(payload);
+    req.flush(rawVisitRecord);
+    expect(result).toEqual(bookmarkVisit);
   });
 
   // ── graceful handling when config is null ─────────────────────────────────

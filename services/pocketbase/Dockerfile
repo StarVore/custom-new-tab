@@ -18,6 +18,7 @@ RUN apk add --no-cache ca-certificates su-exec unzip wget \
     && chmod 0775 /pb/pb_data \
     && rm -f /tmp/pocketbase.zip
 
+COPY services/pocketbase/pb_migrations /pb/pb_migrations
 COPY services/pocketbase/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

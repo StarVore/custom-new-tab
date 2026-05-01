@@ -1,0 +1,127 @@
+<section class="bookmark-stats-shell">
+  <header class="stats-header">
+    <div>
+      <p class="eyebrow">Bookmark Metrics</p>
+      <h2>Visit trends by bookmark</h2>
+      <p class="stats-summary">
+        {{ totalVisitCount() }} visits across {{ chartRows().length }} bookmarks
+      </p>
+    </div>
+
+    <button class="refresh-btn" type="button" (click)="refresh()">
+      Refresh
+    </button>
+  </header>
+
+  <div class="stats-controls">
+    <section class="control-card">
+      <h3>Date range</h3>
+      <div class="preset-row">
+        <button
+          type="button"
+          class="preset-btn"
+          [class.active]="isPresetActive('7d')"
+          (click)="selectPreset('7d')"
+        >
+          7D
+        </button>
+        <button
+          type="button"
+          class="preset-btn"
+          [class.active]="isPresetActive('30d')"
+          (click)="selectPreset('30d')"
+        >
+          30D
+        </button>
+        <button
+          type="button"
+          class="preset-btn"
+          [class.active]="isPresetActive('90d')"
+          (click)="selectPreset('90d')"
+        >
+          90D
+        </button>
+        <button
+          type="button"
+          class="preset-btn"
+          [class.active]="isPresetActive('all')"
+          (click)="selectPreset('all')"
+        >
+          All
+        </button>
+      </div>
+
+      <div class="custom-range-row">
+        <label>
+          <span>Start</span>
+          <input
+            type="date"
+            [ngModel]="customStart()"
+            (ngModelChange)="onCustomStartChange($event)"
+          />
+        </label>
+        <label>
+          <span>End</span>
+          <input
+            type="date"
+            [ngModel]="customEnd()"
+            (ngModelChange)="onCustomEndChange($event)"
+          />
+        </label>
+      </div>
+    </section>
+
+    <section class="control-card bookmark-filter-card">
+      <div class="bookmark-filter-header">
+        <h3>Bookmarks</h3>
+        <div class="bookmark-filter-actions">
+          <button type="button" (click)="selectAllBookmarks()">All</button>
+          <button type="button" (click)="clearBookmarkSelection()">None</button>
+        </div>
+      </div>
+
+      <div class="bookmark-toggle-list">
+        @for (bookmark of bookmarks(); track bookmark.id) {
+        <label class="bookmark-toggle-chip">
+          <input
+            type="checkbox"
+            [checked]="isBookmarkSelected(bookmark.id)"
+            (change)="onBookmarkToggle(bookmark.id, $event)"
+          />
+          <span>{{ bookmark.title }}</span>
+        </label>
+        }
+      </div>
+    </section>
+  </div>
+
+  @if (isLoading()) {
+  <section class="stats-state-card">
+    <p>Loading visit data…</p>
+  </section>
+  } @else if (loadError()) {
+  <section class="stats-state-card error-state">
+    <p>{{ loadError() }}</p>
+  </section>
+  } @else if (!chartRows().length) {
+  <section class="stats-state-card">
+    <p>No bookmark visits match the current filters.</p>
+  </section>
+  } @else {
+  <section class="chart-card">
+    <div class="chart-grid">
+      @for (row of chartRows(); track row.bookmarkId) {
+      <article class="chart-row">
+        <div class="chart-row-header">
+          <span class="chart-label">{{ row.title }}</span>
+          <span class="chart-value">{{ row.count }}</span>
+        </div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill" [style.width.%]="row.widthPercent"></div>
+        </div>
+      </article>
+      }
+    </div>
+  </section>
+  }
+</section>

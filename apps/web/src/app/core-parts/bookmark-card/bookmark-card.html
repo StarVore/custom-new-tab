@@ -2,6 +2,7 @@
   cdkDrag
   cdkDragBoundary=".bookmarks-grid"
   [href]="bookmark().url"
+  (click)="onOpen()"
   class="bookmark-card"
 >
   <div class="bookmark-drag-handle" cdkDragHandle>

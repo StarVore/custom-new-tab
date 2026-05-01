@@ -32,6 +32,8 @@ let bookmarks = [
     { id: '4', title: 'Gmail', url: 'https://mail.google.com', order: 3 },
 ];
 let nextBookmarkId = 5;
+let bookmarkVisits = [];
+let nextVisitId = 1;
 
 function getSortedBookmarks() {
     return [...bookmarks].sort((a, b) => a.order - b.order);
@@ -44,6 +46,20 @@ function getPocketBaseListResponse() {
         totalItems: bookmarks.length,
         totalPages: 1,
         items: getSortedBookmarks(),
+    };
+}
+
+function getVisitListResponse() {
+    const sortedVisits = [...bookmarkVisits].sort((a, b) =>
+        new Date(b.created).getTime() - new Date(a.created).getTime(),
+    );
+
+    return {
+        page: 1,
+        perPage: 500,
+        totalItems: sortedVisits.length,
+        totalPages: 1,
+        items: sortedVisits,
     };
 }
 
@@ -202,6 +218,42 @@ async function handleBookmarks(req, res) {
     res.end(JSON.stringify({ error: 'Not found' }));
 }
 
+async function handleBookmarkVisits(req, res) {
+    const url = req.normalizedUrl || req.url;
+    const method = req.method;
+
+    if (method === 'GET' && url.startsWith('/api/collections/bookmark_visits/records')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(getVisitListResponse()));
+        return;
+    }
+
+    if (method === 'POST' && url === '/api/collections/bookmark_visits/records') {
+        const body = await readBody(req);
+        const now = new Date().toISOString();
+        const newVisit = {
+            id: String(nextVisitId++),
+            bookmarkId: body.bookmarkId || '',
+            bookmarkTitle: body.bookmarkTitle || '',
+            bookmarkUrl: body.bookmarkUrl || '',
+            source: body.source || 'web',
+            context: body.context || '',
+            platform: body.platform || '',
+            userAgent: body.userAgent || '',
+            created: now,
+            updated: now,
+        };
+
+        bookmarkVisits.push(newVisit);
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(newVisit));
+        return;
+    }
+
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+}
+
 // Add mock routes here:
 // - { method, path, file }    serves a static JSON file from the JSONs folder
 // - { method, path, handler } calls a custom async handler function
@@ -242,6 +294,7 @@ function applyCors(req, res) {
     if (origin) {
         res.setHeader('Access-Control-Allow-Origin', origin);
         res.setHeader('Vary', 'Origin');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
     } else {
         res.setHeader('Access-Control-Allow-Origin', '*');
     }
@@ -250,6 +303,7 @@ function applyCors(req, res) {
 
     const requestedHeaders = req.headers['access-control-request-headers'];
     res.setHeader('Access-Control-Allow-Headers', requestedHeaders || 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '86400');
 
     // Chrome may require this for secure-context -> private-network preflights.
     if (req.headers['access-control-request-private-network'] === 'true') {
@@ -274,6 +328,11 @@ const server = http.createServer(function (req, res) {
         normalizedPath.startsWith('/api/collections/bookmarks/records')
     ) {
         handleBookmarks(req, res);
+        return;
+    }
+
+    if (normalizedPath.startsWith('/api/collections/bookmark_visits/records')) {
+        handleBookmarkVisits(req, res);
         return;
     }
 

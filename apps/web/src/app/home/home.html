@@ -1,6 +1,13 @@
-<div class="toggle-hide-btn-container">
-  <button (click)="toggleHide()" class="toggle-hide-btn">
+<div class="view-controls">
+  <button (click)="toggleHide()" class="view-toggle-btn">
     {{hideShowLbl}}
+  </button>
+  <button
+    (click)="toggleStats()"
+    class="view-toggle-btn"
+    [class.active]="showStats"
+  >
+    {{statsLbl}}
   </button>
 </div>
 <main>
@@ -11,6 +18,11 @@
       animate.enter="enter-animation"
       animate.leave="leaving"
     ></app-bookmarks-grid>
+    } @else if (showStats) {
+    <app-bookmark-stats
+      animate.enter="enter-animation"
+      animate.leave="leaving"
+    ></app-bookmark-stats>
     }
   </div>
   <app-footer></app-footer>

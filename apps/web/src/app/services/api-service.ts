@@ -10,19 +10,9 @@ import { API_ENDPOINTS } from "./api-service.config";
 import { IAPIResponse } from "../models/IAPIResponse";
 import { IApodPhoto } from "../models/IApodPhoto";
 import { IBookmark } from "../models/IBookmark";
+import { IBookmarkVisit, IBookmarkVisitPayload } from "../models/IBookmarkVisit";
+import { PocketBaseListResponse, PocketBaseBookmarkRecord, PocketBaseBookmarkVisitRecord } from "../models/IPocketBaseRecord";
 import { ConfigService } from "./config.service";
-
-interface PocketBaseListResponse<T> {
-  items: T[];
-}
-
-interface PocketBaseBookmarkRecord {
-  id: string;
-  title: string;
-  url: string;
-  customImageUrl?: string;
-  order: number;
-}
 
 @Injectable({
   providedIn: "root",
@@ -47,6 +37,10 @@ export class ApiService {
     return `${this.bookmarkBase}/api/collections/bookmarks/records`;
   }
 
+  private get pocketBaseVisitRecordsUrl(): string {
+    return `${this.bookmarkBase}/api/collections/bookmark_visits/records`;
+  }
+
   private mapPocketBaseBookmark(record: PocketBaseBookmarkRecord): IBookmark {
     return {
       id: record.id,
@@ -54,6 +48,23 @@ export class ApiService {
       url: record.url,
       customImageUrl: record.customImageUrl,
       order: record.order,
+    };
+  }
+
+  private mapPocketBaseBookmarkVisit(
+    record: PocketBaseBookmarkVisitRecord,
+  ): IBookmarkVisit {
+    return {
+      id: record.id,
+      bookmarkId: record.bookmarkId,
+      bookmarkTitle: record.bookmarkTitle,
+      bookmarkUrl: record.bookmarkUrl,
+      source: record.source,
+      context: record.context,
+      platform: record.platform,
+      userAgent: record.userAgent,
+      created: record.created,
+      updated: record.updated,
     };
   }
 
@@ -140,5 +151,27 @@ export class ApiService {
         ),
       ),
     ).pipe(switchMap(() => this.getBookmarks()));
+  }
+
+  getBookmarkVisits(): Observable<IBookmarkVisit[]> {
+    return this.http
+      .get<PocketBaseListResponse<PocketBaseBookmarkVisitRecord>>(
+        `${this.pocketBaseVisitRecordsUrl}?sort=-created&perPage=500`,
+      )
+      .pipe(
+        map((response) =>
+          response.items.map((record) => this.mapPocketBaseBookmarkVisit(record)),
+        ),
+      );
+  }
+
+  createBookmarkVisit(
+    visit: IBookmarkVisitPayload,
+  ): Observable<IBookmarkVisit> {
+    return this.http
+      .post<PocketBaseBookmarkVisitRecord>(this.pocketBaseVisitRecordsUrl, visit, {
+        headers: this.getHeaders(),
+      })
+      .pipe(map((record) => this.mapPocketBaseBookmarkVisit(record)));
   }
 }

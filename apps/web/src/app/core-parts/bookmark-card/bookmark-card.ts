@@ -1,6 +1,7 @@
-import { Component, input, output } from "@angular/core";
+import { Component, inject, input, output } from "@angular/core";
 import { IBookmark } from "../../models/IBookmark";
 import { CdkDrag } from "@angular/cdk/drag-drop";
+import { BookmarkVisitService } from "../../services/bookmark-visit.service";
 
 @Component({
   selector: "app-bookmark-card",
@@ -9,6 +10,8 @@ import { CdkDrag } from "@angular/cdk/drag-drop";
   styleUrl: "./bookmark-card.scss",
 })
 export class BookmarkCardComponent {
+  private bookmarkVisitService = inject(BookmarkVisitService);
+
   bookmark = input.required<IBookmark>();
   edit = output<IBookmark>();
   delete = output<IBookmark>();
@@ -34,5 +37,9 @@ export class BookmarkCardComponent {
     event.preventDefault();
     event.stopPropagation();
     this.delete.emit(this.bookmark());
+  }
+
+  onOpen(): void {
+    this.bookmarkVisitService.recordVisit(this.bookmark());
   }
 }

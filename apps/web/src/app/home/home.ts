@@ -1,24 +1,42 @@
-import { ChangeDetectorRef, Component } from "@angular/core";
+import { Component } from "@angular/core";
 import { Footer } from "../core-parts/footer/footer.component";
 import { BookmarksGridComponent } from "../core-parts/bookmarks-grid/bookmarks-grid";
+import { BookmarkStatsComponent } from "../core-parts/bookmark-stats/bookmark-stats";
 import { RouterLink } from "@angular/router";
+
+type HomeViewMode = "bookmarks" | "stats" | "hidden";
 
 @Component({
   selector: "app-home",
   standalone: true,
-  imports: [Footer, BookmarksGridComponent, RouterLink],
+  imports: [Footer, BookmarksGridComponent, BookmarkStatsComponent, RouterLink],
   templateUrl: "./home.html",
   styleUrl: "./home.scss",
 })
 export class HomeComponent {
-  hideShowLbl: string = "Hide";
-  showBookmarks: boolean = true;
+  viewMode: HomeViewMode = "bookmarks";
 
-  constructor(private cdf: ChangeDetectorRef) {}
+  get hideShowLbl(): string {
+    return this.viewMode === "hidden" ? "Show" : "Hide";
+  }
+
+  get statsLbl(): string {
+    return this.viewMode === "stats" ? "Bookmarks" : "Stats";
+  }
+
+  get showBookmarks(): boolean {
+    return this.viewMode === "bookmarks";
+  }
+
+  get showStats(): boolean {
+    return this.viewMode === "stats";
+  }
 
   toggleHide(): void {
-    this.showBookmarks = !this.showBookmarks;
-    this.hideShowLbl = this.showBookmarks ? "Hide" : "Show";
-    this.cdf.detectChanges();
+    this.viewMode = this.viewMode === "hidden" ? "bookmarks" : "hidden";
+  }
+
+  toggleStats(): void {
+    this.viewMode = this.viewMode === "stats" ? "bookmarks" : "stats";
   }
 }

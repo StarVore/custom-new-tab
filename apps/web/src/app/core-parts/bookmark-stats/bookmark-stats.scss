@@ -1,0 +1,232 @@
+.bookmark-stats-shell {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 60px 0 24px;
+  color: #fff;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+    font-size: clamp(1.75rem, 2vw, 2.3rem);
+  }
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: rgba(255, 230, 173, 0.82);
+}
+
+.stats-summary {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.refresh-btn,
+.preset-btn,
+.bookmark-filter-actions button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+  }
+}
+
+.stats-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.control-card,
+.chart-card,
+.stats-state-card {
+  background:
+    linear-gradient(180deg, rgba(16, 30, 46, 0.82), rgba(6, 11, 24, 0.86));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.control-card {
+  padding: 18px 20px;
+
+  h3 {
+    margin: 0 0 14px;
+    font-size: 1rem;
+  }
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.preset-btn.active {
+  background: rgba(255, 230, 173, 0.18);
+  border-color: rgba(255, 230, 173, 0.45);
+}
+
+.custom-range-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+  }
+
+  input {
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    padding: 0.7rem 0.85rem;
+  }
+}
+
+.bookmark-filter-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.bookmark-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bookmark-filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bookmark-toggle-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.bookmark-toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.92);
+
+  input {
+    accent-color: #f3c969;
+  }
+}
+
+.chart-card,
+.stats-state-card {
+  padding: 22px;
+}
+
+.chart-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chart-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chart-row-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chart-label {
+  font-weight: 600;
+}
+
+.chart-value {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.chart-bar-track {
+  position: relative;
+  height: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.chart-bar-fill {
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f3c969, #ff8a5b);
+}
+
+.error-state {
+  border-color: rgba(255, 115, 115, 0.28);
+}
+
+@media (max-width: 900px) {
+  .bookmark-stats-shell {
+    width: min(100%, calc(100% - 24px));
+    padding-top: 36px;
+  }
+
+  .stats-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .stats-header {
+    flex-direction: column;
+  }
+
+  .custom-range-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bookmark-filter-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

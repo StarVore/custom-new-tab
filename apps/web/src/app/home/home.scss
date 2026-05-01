@@ -24,14 +24,16 @@ main {
   }
 }
 
-.toggle-hide-btn-container {
+.view-controls {
   position: absolute;
   top: 14px;
   left: 14px;
   z-index: 10;
+  display: flex;
+  gap: 10px;
 }
 
-.toggle-hide-btn {
+.view-toggle-btn {
   z-index: 10;
   padding: 4px 8px;
   font-size: 0.75rem;
@@ -48,6 +50,11 @@ main {
 
   &:hover {
     background: rgba(255, 255, 255, 0.18);
+  }
+
+  &.active {
+    background: rgba(255, 230, 173, 0.2);
+    border-color: rgba(255, 230, 173, 0.45);
   }
 }
 
