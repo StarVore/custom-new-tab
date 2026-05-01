@@ -96,8 +96,20 @@
   </div>
 
   @if (isLoading()) {
-  <section class="stats-state-card">
-    <p>Loading visit data…</p>
+  <section class="chart-card skeleton-card">
+    <div class="chart-grid">
+      @for (row of [1, 2, 3, 4, 5]; track row) {
+      <article class="chart-row">
+        <div class="chart-row-header">
+          <span class="skeleton skeleton-label"></span>
+          <span class="skeleton skeleton-value"></span>
+        </div>
+        <div class="chart-bar-track">
+          <div class="skeleton skeleton-bar" [style.width.%]="(6 - row) * 18 + 10"></div>
+        </div>
+      </article>
+      }
+    </div>
   </section>
   } @else if (loadError()) {
   <section class="stats-state-card error-state">

@@ -205,6 +205,47 @@
   border-color: rgba(255, 115, 115, 0.28);
 }
 
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.14) 40%,
+    rgba(255, 255, 255, 0.06) 80%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.skeleton-label {
+  height: 14px;
+  width: 40%;
+}
+
+.skeleton-value {
+  height: 14px;
+  width: 28px;
+}
+
+.skeleton-bar {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.skeleton-card .chart-row-header {
+  align-items: center;
+}
+
 @media (max-width: 900px) {
   .bookmark-stats-shell {
     width: min(100%, calc(100% - 24px));
