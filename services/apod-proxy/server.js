@@ -57,26 +57,49 @@ function normalizeExplanationText(html) {
     .trim();
 }
 
+// science.nasa.gov serves the archive listing via this content-list REST endpoint (the
+// static archivepix.html page was retired when apod.nasa.gov moved to science.nasa.gov/apod).
+const APOD_LIST_URL =
+  'https://science.nasa.gov/wp-json/smd/v1/content-list/?' +
+  new URLSearchParams({
+    block_id: 'content-list-9fb5c5e7-d4b9-45f0-b5b2-12831adebef5',
+    'post_types[]': 'image-article',
+    base_terms: JSON.stringify({ category: '22766', 'science-org': '', 'internal-terms': '', 'news-tags': '' }),
+    number_of_items: String(MAX_DAYS_BACK + 5),
+    order: 'DESC',
+    orderby: 'date',
+    current_page: '1',
+    response_format: 'html',
+  }).toString();
+
 async function fetchLatestApodImage() {
-  const archiveHtml = await httpsGet('https://science.nasa.gov/apod/archivepix.html');
-  const pageLinks = [...archiveHtml.matchAll(/href="(ap\d{6}\.html)"/g)].map((m) => m[1]);
+  const listResponse = JSON.parse(await httpsGet(APOD_LIST_URL));
+  const pageLinks = [
+    ...new Set([...listResponse.content.matchAll(/href="(https:\/\/science\.nasa\.gov\/image-article\/apod-[^"]+)"/g)].map((m) => m[1])),
+  ];
 
   if (!pageLinks.length) {
     throw new Error('Could not find any APOD page links in archive');
   }
 
   for (let i = 0; i < Math.min(MAX_DAYS_BACK, pageLinks.length); i++) {
-    const pageUrl = `https://science.nasa.gov/apod/${pageLinks[i]}`;
+    const pageUrl = pageLinks[i];
     const apodHtml = await httpsGet(pageUrl);
-    const imgMatch = apodHtml.match(/<img[^>]+src="(image\/[^"]+)"/i);
 
-    if (!imgMatch) {
-      console.log(`Entry ${i + 1} (${pageLinks[i]}) has no image — skipping (likely a video day)`);
+    if (/<meta property="og:video"/i.test(apodHtml)) {
+      console.log(`Entry ${i + 1} (${pageUrl}) is a video — skipping`);
       continue;
     }
 
-    const imageUrl = `https://science.nasa.gov/apod/${imgMatch[1]}`;
-    const explanationMatch = apodHtml.match(/<b>\s*Explanation:\s*<\/b>\s*(.*?)<p>/is);
+    const imgMatch = apodHtml.match(/<meta property="og:image" content="([^"]+)"/i);
+
+    if (!imgMatch) {
+      console.log(`Entry ${i + 1} (${pageUrl}) has no image — skipping`);
+      continue;
+    }
+
+    const imageUrl = decodeHtmlEntities(imgMatch[1]);
+    const explanationMatch = apodHtml.match(/<strong>\s*Explanation:\s*<\/strong>\s*(.*?)<\/p>/is);
     const explanation = explanationMatch ? normalizeExplanationText(explanationMatch[1]) : '';
 
     console.log(`Found APOD image on entry ${i + 1}: ${imageUrl}`);
