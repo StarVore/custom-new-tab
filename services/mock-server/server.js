@@ -8,8 +8,8 @@ const port = process.env.PORT || 3000;
 // Static APOD mock for development. Avoids hitting NASA during local dev.
 // The real APOD fetch/fallback logic lives in services/apod-proxy.
 const MOCK_APOD = {
-    url: 'https://science.nasa.ngov/apod/image/0006/earthrise_apollo8_big.jpg',
-    pageUrl: 'https://science.nasa.ngov/apod/ap000610.html',
+    url: 'https://science.nasa.gov/apod/image/0006/earthrise_apollo8_big.jpg',
+    pageUrl: 'https://science.nasa.gov/apod/ap000610.html',
     explanation: '[Dev mock] Earthrise — one of the most iconic photographs ever taken, captured by astronaut William Anders on December 24, 1968, during the Apollo 8 mission as the crew orbited the Moon.',
     fetchedAt: new Date().toISOString(),
 };

@@ -13,8 +13,8 @@ Dedicated production service for fetching and parsing NASA's Astronomy Picture o
 
 ```json
 {
-  "url": "https://science.nasa.ngov/apod/image/...",
-  "pageUrl": "https://science.nasa.ngov/apod/apYYMMDD.html",
+  "url": "https://science.nasa.gov/apod/image/...",
+  "pageUrl": "https://science.nasa.gov/apod/apYYMMDD.html",
   "explanation": "...",
   "fetchedAt": "2026-03-25T12:00:00.000Z"
 }

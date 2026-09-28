@@ -114,7 +114,7 @@ describe("ApiService", () => {
   it("getApodImage fetches from apod base URL", () => {
     const photo: IApodPhoto = {
       url: "https://img.example.com/photo.jpg",
-      pageUrl: "https://science.nasa.ngov/apod/ap260101.html",
+      pageUrl: "https://science.nasa.gov/apod/ap260101.html",
       explanation: "A beautiful galaxy",
       fetchedAt: new Date().toISOString(),
     };
