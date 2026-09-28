@@ -58,7 +58,7 @@ function normalizeExplanationText(html) {
 }
 
 async function fetchLatestApodImage() {
-  const archiveHtml = await httpsGet('https://apod.nasa.gov/apod/archivepix.html');
+  const archiveHtml = await httpsGet('https://science.nasa.gov/apod/archivepix.html');
   const pageLinks = [...archiveHtml.matchAll(/href="(ap\d{6}\.html)"/g)].map((m) => m[1]);
 
   if (!pageLinks.length) {
@@ -66,7 +66,7 @@ async function fetchLatestApodImage() {
   }
 
   for (let i = 0; i < Math.min(MAX_DAYS_BACK, pageLinks.length); i++) {
-    const pageUrl = `https://apod.nasa.gov/apod/${pageLinks[i]}`;
+    const pageUrl = `https://science.nasa.gov/apod/${pageLinks[i]}`;
     const apodHtml = await httpsGet(pageUrl);
     const imgMatch = apodHtml.match(/<img[^>]+src="(image\/[^"]+)"/i);
 
@@ -75,7 +75,7 @@ async function fetchLatestApodImage() {
       continue;
     }
 
-    const imageUrl = `https://apod.nasa.gov/apod/${imgMatch[1]}`;
+    const imageUrl = `https://science.nasa.gov/apod/${imgMatch[1]}`;
     const explanationMatch = apodHtml.match(/<b>\s*Explanation:\s*<\/b>\s*(.*?)<p>/is);
     const explanation = explanationMatch ? normalizeExplanationText(explanationMatch[1]) : '';
 

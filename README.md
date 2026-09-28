@@ -278,7 +278,7 @@ Failed writes are queued in `localStorage` under `bookmark_pending_mutations` an
 The background is cached for the current day under `apod_background` in `localStorage`. To force a refresh: `localStorage.removeItem('apod_background')` in the browser console, then reload.
 
 **APOD proxy returns no image**
-The proxy walks back up to 5 days when the current day is a video. If it still fails, check network access from the proxy container to `apod.nasa.gov`.
+The proxy walks back up to 5 days when the current day is a video. If it still fails, check network access from the proxy container to `science.nasa.ngov`.
 
 **Docker build is not using the version I expect**
 

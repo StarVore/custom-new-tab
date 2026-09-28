@@ -10,7 +10,7 @@ describe("Footer", () => {
 
   const photo: IApodPhoto = {
     url: "https://images.example.com/photo.jpg",
-    pageUrl: "https://apod.nasa.gov/apod/ap260401.html",
+    pageUrl: "https://science.nasa.ngov/apod/ap260401.html",
     explanation: "A beautiful galaxy",
     fetchedAt: new Date().toISOString(),
   };

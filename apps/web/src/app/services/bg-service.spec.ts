@@ -13,14 +13,14 @@ describe("BgService", () => {
 
   const stalePhoto: IApodPhoto = {
     url: "https://images.example.com/stale.jpg",
-    pageUrl: "https://apod.nasa.gov/apod/ap260401.html",
+    pageUrl: "https://science.nasa.ngov/apod/ap260401.html",
     explanation: "Cached APOD photo",
     fetchedAt: "2026-04-01T09:00:00.000Z",
   };
 
   const freshPhoto: IApodPhoto = {
     url: "https://images.example.com/fresh.jpg",
-    pageUrl: "https://apod.nasa.gov/apod/ap260404.html",
+    pageUrl: "https://science.nasa.ngov/apod/ap260404.html",
     explanation: "Fresh APOD photo",
     fetchedAt: "2026-04-04T09:00:00.000Z",
   };
@@ -113,7 +113,7 @@ describe("BgService", () => {
   it("serves today's cached photo without calling the API", async () => {
     const todayPhoto: IApodPhoto = {
       url: "https://images.example.com/today.jpg",
-      pageUrl: "https://apod.nasa.gov/apod/today.html",
+      pageUrl: "https://science.nasa.ngov/apod/today.html",
       explanation: "Today's photo",
       fetchedAt: new Date().toISOString(),
     };
@@ -171,7 +171,7 @@ describe("BgService", () => {
   it("does not apply background when today's cached URL is not https", async () => {
     const httpPhoto: IApodPhoto = {
       url: "http://images.example.com/photo.jpg",
-      pageUrl: "https://apod.nasa.gov/apod/today.html",
+      pageUrl: "https://science.nasa.ngov/apod/today.html",
       explanation: "Photo with http URL",
       fetchedAt: new Date().toISOString(),
     };
